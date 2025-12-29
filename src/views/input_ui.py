@@ -14,7 +14,7 @@ def render_input():
         with col1:
             pessimism = st.select_slider("Pessimism level", options=[1, 2, 3, 4, 5])
         with col2:
-            submitted = st.form_submit_button("Send")
+            submitted = st.form_submit_button("Send", type="primary")
 
         if submitted:
             st.session_state.user_input = {"about": about, "goal": goal, "plan": plan, "wrong": wrong}

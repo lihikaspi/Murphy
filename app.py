@@ -1,10 +1,12 @@
 import streamlit as st
+from PIL import Image
 from src.views.input_ui import render_input
 from src.views.choice_ui import render_choice
 from src.views.output_ui import render_dashboard
 
 # Configuration
-st.set_page_config(page_title="Murphy", layout="wide")
+img = Image.open("images/broken_clock.png")
+st.set_page_config(page_title="Murphy", page_icon=img, layout="wide")
 
 # Initialize State
 if "page" not in st.session_state:

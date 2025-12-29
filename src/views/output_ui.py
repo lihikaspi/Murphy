@@ -69,11 +69,11 @@ def render_dashboard():
         with ctrl_col2:
             st.write("##")  # Visual alignment spacer
             if st.button("Update", type="primary", use_container_width=True):
-                # Function call logic goes here
+                # Function call logic goes here TODO
                 pass
 
         with ctrl_col3:
             st.write("##")  # Visual alignment spacer
-            if st.button("New", use_container_width=True):
+            if st.button("New Session", use_container_width=True):
                 st.session_state.page = "INPUT"
                 st.rerun()
