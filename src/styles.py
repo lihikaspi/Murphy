@@ -5,67 +5,52 @@ def apply_custom_styles():
     """Applies global CSS for height, component styling, and centering the sidebar header."""
     st.markdown("""
         <style>
-            /* Tooltip fix: Reposition to the right side and allow text wrapping */
-            div[data-testid="stTooltipHoverTarget"] + div {
-                white-space: normal !important;
-                max-width: 200px !important;
-                word-wrap: break-word !important;
-                /* Attempt to force position to the right */
-                left: 100% !important;
-                top: 50% !important;
-                transform: translate(15px, -50%) !important;
+            /* 1. Sidebar Layout & Bottom Alignment */
+            [data-testid="stSidebarUserContent"] {
+                padding-top: 0rem !important; /* Removed space from above the logo */
+                display: flex;
+                flex-direction: column;
+                height: 100vh !important;
+                overflow-y: hidden !important;
             }
 
-            /* Target the specific tooltip content container in Streamlit */
-            .stTooltipContent {
-                max-width: 200px !important;
-                white-space: normal !important;
+            /* This div acts as a flexible spacer to push content below it to the bottom */
+            .sidebar-spacer {
+                flex-grow: 1;
             }
 
-            /* Ensure the tooltip arrow (if any) is hidden or adjusted */
-            div[data-testid="stTooltipHoverTarget"] + div > div:first-child {
-                display: none !important;
+            /* 2. Centered Logo and Title */
+            [data-testid="stSidebar"] div.stImage {
+                display: flex;
+                justify-content: center;
+                margin-top: 0px !important;
+                margin-bottom: 5px !important;
             }
 
-            /* Centering the Sidebar Logo and Title */
             .centered-title {
                 text-align: center;
                 font-size: 2rem;
                 font-weight: 700;
-                margin-top: -10px;
-                margin-bottom: 0px !important;
-                padding-bottom: 0px !important;
+                margin-top: 0px !important;
+                margin-bottom: 5px !important;
                 color: #31333F;
             }
 
-            [data-testid="stSidebar"] div.stImage {
-                display: flex;
-                justify-content: center;
-                margin-bottom: 5px !important;
-            }
-
-            /* Standardize spacing for dividers to reduce density */
+            /* 3. Spacing for dividers and buttons */
             [data-testid="stSidebar"] hr {
-                margin-top: 1.5rem !important;
+                margin-top: 0.8rem !important;
                 margin-bottom: 1.5rem !important;
             }
 
-            [data-testid="stSidebar"] .stButton {
-                margin-top: 2px !important;
-                margin-bottom: 2px !important;
-            }
-
-            /* Vertical block gap refinement */
             [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-                gap: 0.75rem !important;
+                gap: 0.5rem !important;
             }
 
-            /* Fit sidebar to screen and hide ALL scrollbars */
+            /* 4. Fit sidebar to screen and hide scrollbars */
             [data-testid="stSidebar"], 
             [data-testid="stSidebar"] > div:first-child {
                 overflow: hidden !important;
                 scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
                 height: 100vh !important;
             }
 
@@ -73,28 +58,28 @@ def apply_custom_styles():
                 display: none !important;
             }
 
-            /* Force Wide Mode padding reduction */
-            .block-container {
-                padding-top: 2rem !important;
-                padding-bottom: 0rem !important;
-                max-height: 100vh;
-            }
-
-            /* Hide main scrollbar */
-            body {
-                overflow: hidden;
-            }
-
-            /* Style disabled text areas for dashboard look */
+            /* 5. Dashboard card styling */
             .stTextArea textarea:disabled {
                 background-color: #f8f9fa !important;
                 color: #333 !important;
                 border: 1px solid #ddd !important;
             }
 
-            /* Remove excess space above subheaders */
-            h3 {
-                margin-top: 0px !important;
+            /* 6. Make st.dialog (popup) wider */
+            div[role="dialog"] {
+                width: 60vw !important;
+                max-width: 1000px !important;
+            }
+
+            /* Global padding reduction */
+            .block-container {
+                padding-top: 2rem !important;
+                padding-bottom: 0rem !important;
+                max-height: 100vh;
+            }
+
+            body {
+                overflow: hidden;
             }
         </style>
     """, unsafe_allow_html=True)
