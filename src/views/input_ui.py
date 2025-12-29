@@ -2,8 +2,6 @@ import streamlit as st
 
 
 def render_input():
-    st.title("Murphy")
-
     # Fetch existing values from state to preserve input
     data = st.session_state.get("user_input", {})
 

@@ -13,7 +13,7 @@ except:
 
 st.set_page_config(page_title="Murphy", page_icon=img, layout="wide")
 
-# Apply global styling
+# Apply global styling (handles centering and tooltip wrapping)
 apply_custom_styles()
 
 # Initialize State
@@ -28,26 +28,40 @@ if "history_text" not in st.session_state:
 
 # --- SIDEBAR NAVIGATION ---
 with st.sidebar:
+    # Use a container to group the logo and title for CSS targeting
+    st.markdown('<div class="sidebar-header">', unsafe_allow_html=True)
     if img:
-        st.image(img, width=100)
-    st.title("Murphy")
+        # Centering the image using columns or Markdown/HTML
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(img, use_container_width=True)
+
+    # Custom HTML for centered title
+    st.markdown('<h1 class="centered-title">Murphy</h1>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown("---")
 
-    # 1. Back Button (Preserves Data)
-    if st.button("Edit User Input", use_container_width=True):
+    # 1. Back Button with Tooltip (Preserves Data)
+    if st.button(
+            "Edit User Input",
+            use_container_width=True,
+            help="Navigates back to the input form while preserving your current text."
+    ):
         st.session_state.page = "INPUT"
         st.rerun()
 
-    # 2. New Session Button (Resets Data)
-    if st.button("Clear Session", use_container_width=True):
+    # 2. New Session Button with Tooltip (Resets Data)
+    if st.button(
+            "Clear Session",
+            use_container_width=True,
+            help="Begins a new session and clears all current inputs and analysis summary."
+    ):
         st.session_state.user_input = {}
         st.session_state.llm_responses = {}
         st.session_state.history_text = ""
         st.session_state.page = "INPUT"
         st.rerun()
-
-    st.markdown("---")
-    st.info(" 'Edit User Input' navigates back to the input form.\n'Clear Session' begins a new session.")
 
 # Routing Logic
 if st.session_state.page == "INPUT":
