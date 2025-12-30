@@ -2,3 +2,4 @@ google-genai
 Pillow
 flask
 flask-cors
+flask-session

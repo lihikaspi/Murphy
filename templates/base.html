@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Murphy - Strategic Pre-mortem</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
+
+        /* Smooth Fade In */
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Scrollbar for Textareas */
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
+        textarea::-webkit-scrollbar-thumb:hover { background-color: #94A3B8; }
+
+        /* Card Hover Effects */
+        .hover-card { transition: all 0.2s ease; }
+        .hover-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="flex min-h-screen text-slate-900">
+
+    <!-- Modern Sidebar -->
+    <aside class="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col fixed inset-y-0 z-50">
+        <div class="p-8 pb-4">
+            <div class="flex items-center gap-3 text-slate-900 mb-8">
+                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-slate-200">M</div>
+                <span class="text-2xl font-bold tracking-tight">Murphy</span>
+            </div>
+
+            <nav class="space-y-1">
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-3">Current Session</div>
+
+                <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Input Strategy
+                </a>
+
+                {% if session.get('current_scenario') %}
+                <a href="/choice" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/choice' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Failure Scenario
+                </a>
+                {% endif %}
+
+                {% if session.get('dashboard_data') %}
+                <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Final Dashboard
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+
+        <div class="mt-auto p-6 border-t border-slate-100">
+            <a href="/reset" class="flex items-center justify-center gap-2 w-full px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                <i data-lucide="refresh-ccw" class="w-4 h-4"></i> New Session
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 md:ml-72 min-h-screen bg-[#F8FAFC] fade-in">
+        <!-- Mobile Header -->
+        <div class="md:hidden bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold">M</div>
+                <span class="font-bold text-lg">Murphy</span>
+            </div>
+            <a href="/reset" class="p-2 text-slate-500 hover:bg-slate-50 rounded-md"><i data-lucide="refresh-ccw" class="w-5 h-5"></i></a>
+        </div>
+
+        <div class="p-6 md:p-12 max-w-7xl mx-auto">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

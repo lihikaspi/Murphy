@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto pb-16">
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-slate-200 pb-8">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase tracking-wide">Analysis Complete</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900">{{ dashboard.title }}</h1>
+        </div>
+        <button onclick="window.print()" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2">
+            <i data-lucide="download" class="w-4 h-4"></i> PDF
+        </button>
+    </header>
+
+    <!-- 1. The 2x2 Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <!-- Q1: Original Plan -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[28rem]">
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <h3 class="font-bold text-slate-700 flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Original Plan</h3>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll flex-1">
+                <p class="text-slate-600 whitespace-pre-wrap text-sm leading-relaxed">{{ user_plan }}</p>
+            </div>
+        </section>
+
+        <!-- Q2: Critical Risks -->
+        <section class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden flex flex-col h-[28rem]">
+             <div class="px-6 py-4 border-b border-red-100 bg-red-50/30 flex items-center justify-between">
+                <h3 class="font-bold text-red-700 flex items-center gap-2"><i data-lucide="alert-octagon" class="w-4 h-4"></i> Critical Weaknesses</h3>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll flex-1">
+                <p class="text-slate-800 whitespace-pre-wrap text-sm leading-7">{{ dashboard.problems }}</p>
+            </div>
+        </section>
+
+        <!-- Q3: Revised Strategy -->
+        <section class="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden flex flex-col h-[28rem]">
+            <div class="px-6 py-4 border-b border-indigo-100 bg-indigo-50/30 flex items-center justify-between">
+                <h3 class="font-bold text-indigo-700 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Revised Strategy</h3>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll flex-1">
+                <p class="text-slate-800 whitespace-pre-wrap text-sm leading-7">{{ dashboard.revised_plan }}</p>
+            </div>
+        </section>
+
+        <!-- Q4: Actions -->
+        <section class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden flex flex-col h-[28rem]">
+            <div class="px-6 py-4 border-b border-emerald-100 bg-emerald-50/30 flex items-center justify-between">
+                <h3 class="font-bold text-emerald-700 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Immediate Actions</h3>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll flex-1">
+                <p class="text-slate-800 whitespace-pre-wrap text-sm leading-7">{{ dashboard.improvements }}</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- 2. Simulation Recap (Scenarios & Choices) -->
+    <section class="mb-12">
+        <div class="flex items-center gap-3 mb-6">
+            <h2 class="text-xl font-bold text-slate-900">Simulation Recap</h2>
+            <div class="h-px bg-slate-200 flex-1"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for choice in choices %}
+            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="p-1.5 bg-red-100 text-red-600 rounded-lg"><i data-lucide="{{ choice.scenario_icon }}" class="w-4 h-4"></i></div>
+                    <span class="text-xs font-bold text-slate-400 uppercase">Scenario 0{{ choice.id }}</span>
+                </div>
+                <h4 class="font-bold text-slate-800 mb-2">{{ choice.scenario_title }}</h4>
+                <div class="text-xs font-semibold text-slate-500 uppercase mb-1">Your Choice:</div>
+                <p class="text-sm text-indigo-700 font-medium">{{ choice.decision }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 3. Refinement & Feedback Section -->
+    <section class="bg-slate-900 rounded-3xl p-8 md:p-10 text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-12 opacity-10">
+            <i data-lucide="message-square-dashed" class="w-64 h-64 text-white"></i>
+        </div>
+
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Input Form -->
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-indigo-500 rounded-lg text-white"><i data-lucide="sliders" class="w-5 h-5"></i></div>
+                    <h2 class="text-2xl font-bold">Refine Analysis</h2>
+                </div>
+                <p class="text-slate-400 mb-6 text-sm leading-relaxed">Not satisfied? Tell Murphy to adjust the parameters. Adding new constraints will regenerate the Action Plan.</p>
+
+                <form action="/refine" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Your Feedback</label>
+                        <textarea name="feedback" required class="w-full h-32 bg-slate-800 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="e.g. 'This is too expensive...'"></textarea>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Pessimism</label>
+                            <select name="pessimism" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                                <option value="3">Cautious (Lvl 3)</option>
+                                <option value="4">Pessimistic (Lvl 4)</option>
+                                <option value="5">Catastrophic (Lvl 5)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-900/50">
+                                Update Dashboard <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- History Log -->
+            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-300 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-slate-500"></i> Feedback History</h3>
+                    <span class="text-xs bg-slate-700 text-slate-400 px-2 py-1 rounded">{{ dashboard.feedback_history|length }} Updates</span>
+                </div>
+
+                <div class="space-y-4 max-h-[300px] overflow-y-auto custom-scroll pr-2">
+                    {% for item in dashboard.feedback_history %}
+                    <div class="border-l-2 border-indigo-500 pl-4 py-1">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">Today, {{ item.time }}</span>
+                            <span class="text-indigo-400 font-mono">Lvl {{ item.pessimism }}</span>
+                        </div>
+                        <p class="text-sm text-slate-200">"{{ item.text }}"</p>
+                    </div>
+                    {% else %}
+                    <div class="text-sm text-slate-500 italic">No refinement updates yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
