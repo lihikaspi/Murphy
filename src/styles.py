@@ -1,85 +1,72 @@
 import streamlit as st
 
-
 def apply_custom_styles():
-    """Applies global CSS for height, component styling, and centering the sidebar header."""
+    """Applies global CSS to ensure a zero-scroll, viewport-fitted experience."""
     st.markdown("""
         <style>
-            /* 1. Sidebar Layout & Bottom Alignment */
+            /* 1. Reset Body and Container to Viewport Height */
+            html, body, [data-testid="stAppViewContainer"] {
+                height: 100vh;
+                overflow: hidden !important;
+            }
+
+            /* 2. Main content container padding and height control */
+            .block-container {
+                padding-top: 1.5rem !important;
+                padding-bottom: 1.5rem !important;
+                padding-left: 3rem !important;
+                padding-right: 3rem !important;
+                height: 100vh !important;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* 3. Force st.form and other containers to be flexible */
+            [data-testid="stForm"] {
+                display: flex;
+                flex-direction: column;
+                flex-grow: 1;
+                border: none !important;
+                padding: 0 !important;
+            }
+
+            /* 4. Sidebar optimization */
             [data-testid="stSidebarUserContent"] {
-                padding-top: 0rem !important; /* Removed space from above the logo */
                 display: flex;
                 flex-direction: column;
                 height: 100vh !important;
-                overflow-y: hidden !important;
             }
 
-            /* This div acts as a flexible spacer to push content below it to the bottom */
             .sidebar-spacer {
                 flex-grow: 1;
             }
 
-            /* 2. Centered Logo and Title */
-            [data-testid="stSidebar"] div.stImage {
-                display: flex;
-                justify-content: center;
-                margin-top: 0px !important;
-                margin-bottom: 5px !important;
-            }
-
             .centered-title {
                 text-align: center;
-                font-size: 2rem;
+                font-size: 1.8rem;
                 font-weight: 700;
-                margin-top: 0px !important;
-                margin-bottom: 5px !important;
+                margin-bottom: 0px !important;
                 color: #31333F;
             }
 
-            /* 3. Spacing for dividers and buttons */
-            [data-testid="stSidebar"] hr {
-                margin-top: 0.8rem !important;
-                margin-bottom: 1.5rem !important;
+            /* 5. Compact TextArea & Grid Adjustments */
+            .stTextArea textarea {
+                resize: none !important;
             }
 
-            [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-                gap: 0.5rem !important;
-            }
-
-            /* 4. Fit sidebar to screen and hide scrollbars */
-            [data-testid="stSidebar"], 
-            [data-testid="stSidebar"] > div:first-child {
-                overflow: hidden !important;
-                scrollbar-width: none !important;
-                height: 100vh !important;
-            }
-
-            [data-testid="stSidebar"]::-webkit-scrollbar {
+            /* 6. Hide default scrollbars globally */
+            ::-webkit-scrollbar {
                 display: none !important;
             }
-
-            /* 5. Dashboard card styling */
-            .stTextArea textarea:disabled {
-                background-color: #f8f9fa !important;
-                color: #333 !important;
-                border: 1px solid #ddd !important;
+            * {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
             }
 
-            /* 6. Make st.dialog (popup) wider */
+            /* 7. Dialog/Popup sizing */
             div[role="dialog"] {
-                width: 60vw !important;
-                max-width: 1000px !important;
-            }
-
-            /* Global padding reduction */
-            .block-container {
-                padding-top: 2rem !important;
-                padding-bottom: 0rem !important;
-                max-height: 100vh;
-            }
-
-            body {
-                overflow: hidden;
+                width: 70vw !important;
+                max-width: 900px !important;
             }
         </style>
     """, unsafe_allow_html=True)
