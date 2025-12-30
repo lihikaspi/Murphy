@@ -1,3 +1,4 @@
-streamlit
-google
+google-genai
 Pillow
+flask
+flask-cors

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Murphy - Pre-mortem Simulator</title>
+
+    <!-- Tailwind CSS (Styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!--
+      React & Babel (Frontend Framework)
+      NOTE: These are loaded via CDN to allow this file to run without 'npm install' or a build step.
+      The "Missed locally stored library" warning in your editor can be safely ignored;
+      the browser will fetch these automatically.
+    -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.263.1"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fb; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Global Streamlit-like Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e0e2e6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+
+        /* Utility for internal scrolling containers */
+        .custom-scroll {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Shield, AlertTriangle, ArrowRight, RefreshCw, Activity, Clock, Terminal, ChevronDown, History, Zap } = lucide;
+
+        // --- CONSTANTS ---
+        const PESSIMISM_OPTIONS = [
+            { value: 1, label: "1 - Optimistic (Best Case)" },
+            { value: 2, label: "2 - Realistic (Likely)" },
+            { value: 3, label: "3 - Skeptical (Cautious)" },
+            { value: 4, label: "4 - Pessimistic (Worst Case)" },
+            { value: 5, label: "5 - Murphy's Law (Catastrophic)" }
+        ];
+
+        // --- COMPONENTS ---
+
+        // 1. Sidebar
+        const Sidebar = ({ onReset, mode }) => (
+            <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col p-4 fixed left-0 top-0 z-10 hidden md:flex">
+                <div className="flex items-center justify-center mb-8 mt-2">
+                    <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-xl mr-3 shadow-lg">M</div>
+                    <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">Murphy</h1>
+                </div>
+
+                <div className="flex-1 space-y-2">
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Session</div>
+                    <button onClick={onReset} className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 flex items-center gap-2 transition-colors">
+                        <RefreshCw size={16} /> New Session
+                    </button>
+                    <div className="px-3 py-2 text-xs text-green-600 bg-green-50 rounded mt-4 border border-green-100 flex items-center gap-2">
+                        <Activity size={12} /> Mode: {mode}
+                    </div>
+                </div>
+
+                <div className="mt-auto pt-4 border-t border-gray-100">
+                    <div className="text-xs text-gray-400 text-center">&copy; 2025 Murphy Logic</div>
+                </div>
+            </div>
+        );
+
+        // 2. Input View
+        const InputView = ({ onSubmit, defaultValues }) => {
+            const [formData, setFormData] = useState(defaultValues || {
+                about: '', goal: '', plan: '', wrong: '', pessimism: 3
+            });
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                setTimeout(() => onSubmit(formData), 800);
+            };
+
+            return (
+                <div className="max-w-5xl mx-auto pt-10 fade-in px-4 md:px-0 mb-12">
+                    <div className="mb-8">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-2">Plan Your Future</h2>
+                        <p className="text-gray-500">Tell Murphy what you want to achieve, and we'll tell you why it might fail.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-6">
+                                <div className="glass-panel p-5 rounded-xl">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">About You</label>
+                                    <textarea name="about" value={formData.about} onChange={handleChange} className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:outline-none bg-gray-50 h-32 resize-none custom-scroll" placeholder="I am a software engineer building a SaaS..." required />
+                                </div>
+                                <div className="glass-panel p-5 rounded-xl">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">The Goal</label>
+                                    <textarea name="goal" value={formData.goal} onChange={handleChange} className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:outline-none bg-gray-50 h-32 resize-none custom-scroll" placeholder="Reach 10k MRR by Q4..." required />
+                                </div>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="glass-panel p-5 rounded-xl">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">The Plan</label>
+                                    <textarea name="plan" value={formData.plan} onChange={handleChange} className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:outline-none bg-gray-50 h-32 resize-none custom-scroll" placeholder="1. Launch Product Hunt..." required />
+                                </div>
+                                <div className="glass-panel p-5 rounded-xl">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Known Risks</label>
+                                    <textarea name="wrong" value={formData.wrong} onChange={handleChange} className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:outline-none bg-gray-50 h-32 resize-none custom-scroll" placeholder="Server might crash..." />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="w-full md:w-1/2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Pessimism Level (Murphy's Law)</label>
+                                <div className="relative">
+                                    <select name="pessimism" value={formData.pessimism} onChange={handleChange} className="w-full p-3 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-black focus:outline-none font-medium text-gray-700">
+                                        {PESSIMISM_OPTIONS.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                                    </select>
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                </div>
+                            </div>
+                            <button type="submit" disabled={isSubmitting} className="w-full md:w-auto px-8 py-3 bg-gray-900 text-white font-bold rounded-lg shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+                                {isSubmitting ? 'Simulating...' : 'Initiate Stress Test'} <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            );
+        };
+
+        // 3. Choice View
+        const ChoiceView = ({ scenario, onCommit }) => {
+            const [selectedOption, setSelectedOption] = useState(scenario.options[0]);
+            const [customText, setCustomText] = useState("");
+            const [isCommitting, setIsCommitting] = useState(false);
+
+            const handleCommit = () => {
+                setIsCommitting(true);
+                setTimeout(() => onCommit(selectedOption, customText), 800);
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto pt-16 fade-in px-4 md:px-0">
+                    <div className="bg-red-50 border border-red-100 rounded-2xl p-8 mb-8 shadow-sm">
+                        <div className="flex items-center gap-3 mb-4 text-red-700">
+                            <AlertTriangle size={28} />
+                            <h2 className="text-xl font-bold">Failed Timeline Alert</h2>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">{scenario.title}</h3>
+                        <p className="text-gray-700 text-lg leading-relaxed mb-4">{scenario.description}</p>
+                        <div className="bg-white/50 p-4 rounded-lg text-sm text-red-800 font-medium">Consequence: {scenario.consequences}</div>
+                    </div>
+
+                    <div className="glass-panel p-8 rounded-2xl">
+                        <h4 className="font-bold text-gray-800 mb-6">What is your immediate contingency?</h4>
+                        <div className="space-y-3">
+                            {scenario.options.map((opt, idx) => (
+                                <label key={idx} className={`flex items-center p-4 rounded-xl border cursor-pointer transition-all ${selectedOption === opt ? 'border-black bg-gray-50 ring-1 ring-black' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    <input type="radio" name="contingency" className="w-5 h-5 text-black focus:ring-black" checked={selectedOption === opt} onChange={() => setSelectedOption(opt)} />
+                                    <span className="ml-3 text-gray-700 font-medium">{opt}</span>
+                                </label>
+                            ))}
+                        </div>
+                        {selectedOption === "Other" && (
+                            <div className="mt-4 pl-8">
+                                <input type="text" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:outline-none" placeholder="Describe your action..." value={customText} onChange={(e) => setCustomText(e.target.value)} autoFocus />
+                            </div>
+                        )}
+                        <div className="mt-8 flex justify-end">
+                            <button onClick={handleCommit} className="px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-lg hover:bg-red-700 transition-all flex items-center gap-2">
+                                {isCommitting ? 'Calculating Impact...' : 'Commit Decision'} <Activity size={18} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 4. Dashboard View
+        const DashboardView = ({ dashboardData, userPlan, onRefine, initialPessimism, feedbackHistory }) => {
+            const [feedback, setFeedback] = useState("");
+            const [isUpdating, setIsUpdating] = useState(false);
+            const [currentPessimism, setCurrentPessimism] = useState(initialPessimism || 3);
+
+            const handleUpdate = () => {
+                if (!feedback.trim()) return;
+                setIsUpdating(true);
+                setTimeout(() => {
+                    onRefine(feedback, currentPessimism);
+                    setFeedback("");
+                    setIsUpdating(false);
+                }, 1000);
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto pt-6 fade-in px-4 md:px-0 pb-12">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <Shield size={24} className="text-gray-700" />
+                            <h2 className="text-2xl font-bold text-gray-900">{dashboardData.title}</h2>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div className="glass-panel p-5 rounded-xl flex flex-col h-80 relative group overflow-hidden">
+                            <div className="absolute top-4 right-4 text-gray-300 group-hover:text-gray-400"><Clock size={16} /></div>
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 flex-shrink-0">Original Plan</h3>
+                            <div className="flex-1 overflow-y-auto pr-2 text-gray-600 text-sm whitespace-pre-wrap custom-scroll">{userPlan}</div>
+                        </div>
+                        <div className="glass-panel p-5 rounded-xl flex flex-col h-80 border-l-4 border-red-500 bg-red-50/30 overflow-hidden">
+                            <h3 className="text-sm font-bold text-red-600 uppercase tracking-wider mb-2 flex-shrink-0">Critical Failures Identified</h3>
+                            <div className="flex-1 overflow-y-auto pr-2 text-gray-800 text-sm whitespace-pre-wrap leading-relaxed custom-scroll">{dashboardData.problems}</div>
+                        </div>
+                        <div className="glass-panel p-5 rounded-xl flex flex-col h-80 border-l-4 border-blue-500 bg-blue-50/30 overflow-hidden">
+                            <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2 flex-shrink-0">Optimized Strategy</h3>
+                            <div className="flex-1 overflow-y-auto pr-2 text-gray-800 text-sm whitespace-pre-wrap leading-relaxed custom-scroll">{dashboardData.revised_plan}</div>
+                        </div>
+                        <div className="glass-panel p-5 rounded-xl flex flex-col h-80 border-l-4 border-green-500 bg-green-50/30 overflow-hidden">
+                            <h3 className="text-sm font-bold text-green-600 uppercase tracking-wider mb-2 flex-shrink-0">Actionable Improvements</h3>
+                            <div className="flex-1 overflow-y-auto pr-2 text-gray-800 text-sm whitespace-pre-wrap leading-relaxed custom-scroll">{dashboardData.improvements}</div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-6">
+                        <div className="glass-panel w-full md:w-1/3 p-4 rounded-xl flex flex-col h-64">
+                            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+                                <History size={14} className="text-gray-400" />
+                                <span className="text-xs font-bold text-gray-400 uppercase">Feedback Log</span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-3 custom-scroll">
+                                {feedbackHistory.length === 0 && <span className="text-xs text-gray-400 italic">No feedback updates yet.</span>}
+                                {feedbackHistory.map((item, i) => (
+                                    <div key={i} className="text-xs border-l-2 border-gray-300 pl-2">
+                                        <div className="text-gray-500 font-semibold mb-0.5 flex justify-between">
+                                            <span>{new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                            <span className="bg-gray-100 px-1 rounded text-[10px]">Lvl {item.pessimism}</span>
+                                        </div>
+                                        <p className="text-gray-700">{item.text}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="glass-panel w-full md:w-2/3 p-4 rounded-xl flex flex-col justify-between h-64">
+                            <div className="flex-1 flex flex-col">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Terminal size={14} className="text-gray-400" />
+                                    <span className="text-xs font-bold text-gray-400 uppercase">Refine Analysis</span>
+                                </div>
+                                <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Critique the plan..." className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none overflow-y-auto flex-1 custom-scroll" onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleUpdate())} />
+                            </div>
+                            <div className="flex items-center gap-3 mt-3">
+                                <div className="relative w-48">
+                                    <select value={currentPessimism} onChange={(e) => setCurrentPessimism(Number(e.target.value))} className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-md text-xs font-medium appearance-none cursor-pointer focus:ring-2 focus:ring-black focus:outline-none">
+                                        {PESSIMISM_OPTIONS.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                                    </select>
+                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                                </div>
+                                <button onClick={handleUpdate} disabled={isUpdating} className="flex-1 px-4 py-2 bg-black text-white rounded-md text-sm font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                    {isUpdating ? <RefreshCw className="animate-spin" size={16} /> : <Zap size={16} />}
+                                    {isUpdating ? 'Refining...' : 'Update Analysis'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [view, setView] = useState("INPUT");
+            const [mode, setMode] = useState("Checking...");
+            const [userInput, setUserInput] = useState({});
+            const [currentScenario, setCurrentScenario] = useState(null);
+            const [dashboardData, setDashboardData] = useState(null);
+            const [feedbackHistory, setFeedbackHistory] = useState([]);
+
+            const mockGenerator = {
+                scenario: (data) => ({
+                    title: "Dependency Chain Collapse",
+                    description: `Based on your plan: "${data.plan.substring(0, 30)}...", a critical 3rd party service raises prices by 400% effectively killing your margin overnight.`,
+                    consequences: "Instant insolvency if not mitigated within 48 hours.",
+                    options: ["Pivot to open-source alternative", "Pass cost to customers", "Shutdown service temporarily", "Other"]
+                }),
+                dashboard: (data, choice) => ({
+                    title: "Strategic Fortification Dashboard",
+                    revised_plan: `REVISED STRATEGY:\n1. Abstract all external dependencies behind a service interface.\n2. ${data.plan}\n3. Maintain a 3-month runway cash reserve.`,
+                    problems: "CRITICAL WEAKNESSES:\n- Heavy reliance on external pricing models.\n- No vendor lock-in mitigation strategy.",
+                    improvements: "IMMEDIATE ACTIONS:\n- Audit all 3rd party SLAs.\n- Implement 'Adapter Pattern' in codebase for easy swapping.",
+                    history: `Log: User chose contingency: ${choice}`
+                }),
+                refine: (prev, feedback, pessimism) => ({
+                    ...prev,
+                    improvements: `${prev.improvements}\n\n[Refined @ Lvl ${pessimism}]: Added steps addressing "${feedback}".`
+                })
+            };
+
+            useEffect(() => {
+                const checkBackend = async () => {
+                    try {
+                        const res = await fetch('http://localhost:5000/api/health');
+                        if (res.ok) setMode("Backend Connected");
+                        else throw new Error("Failed");
+                    } catch (e) {
+                        setMode("Simulation (Preview)");
+                        console.log("Backend not found, using simulation mode.");
+                    }
+                };
+                checkBackend();
+            }, []);
+
+            const handleInputSubmit = async (data) => {
+                setUserInput(data);
+                if (mode.includes("Simulation")) {
+                    setCurrentScenario(mockGenerator.scenario(data));
+                } else {
+                    const res = await fetch('http://localhost:5000/api/generate_scenario', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    setCurrentScenario(await res.json());
+                }
+                setView("CHOICE");
+            };
+
+            const handleChoiceCommit = async (choice, customText) => {
+                const payload = { user_input: userInput, choice, custom_choice: customText };
+                if (mode.includes("Simulation")) {
+                    setDashboardData(mockGenerator.dashboard(userInput, choice === "Other" ? customText : choice));
+                } else {
+                    const res = await fetch('http://localhost:5000/api/generate_dashboard', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    setDashboardData(await res.json());
+                }
+                setView("DASHBOARD");
+            };
+
+            const handleRefine = async (feedback, pessimism) => {
+                setFeedbackHistory(prev => [{ text: feedback, pessimism, timestamp: new Date() }, ...prev]);
+                if (mode.includes("Simulation")) {
+                    setDashboardData(mockGenerator.refine(dashboardData, feedback, pessimism));
+                } else {
+                    const res = await fetch('http://localhost:5000/api/refine_dashboard', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ current_dashboard: dashboardData, feedback, pessimism })
+                    });
+                    setDashboardData(await res.json());
+                }
+            };
+
+            const handleReset = () => {
+                setUserInput({});
+                setDashboardData(null);
+                setCurrentScenario(null);
+                setFeedbackHistory([]);
+                setView("INPUT");
+            };
+
+            return (
+                <div className="min-h-screen bg-[#f8f9fb] font-sans text-gray-900">
+                    <Sidebar onReset={handleReset} mode={mode} />
+                    <div className="md:pl-64 min-h-screen">
+                        <div className="md:hidden h-16 bg-white border-b flex items-center px-4 justify-between">
+                            <span className="font-bold text-lg">Murphy</span>
+                            <button onClick={handleReset}><RefreshCw size={20} /></button>
+                        </div>
+                        {view === "INPUT" && <InputView onSubmit={handleInputSubmit} defaultValues={userInput} />}
+                        {view === "CHOICE" && currentScenario && <ChoiceView scenario={currentScenario} onCommit={handleChoiceCommit} />}
+                        {view === "DASHBOARD" && dashboardData && <DashboardView dashboardData={dashboardData} userPlan={userInput.plan} initialPessimism={Number(userInput.pessimism)} feedbackHistory={feedbackHistory} onRefine={handleRefine} />}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
