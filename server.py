@@ -1,13 +1,15 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime
 import llm_logic
 
 app = Flask(__name__)
-app.secret_key = "murphy_v2_secret"
+app.secret_key = "murphy_secret_key_v2"  # Using standard key for session
 
 
 @app.route('/')
 def index():
+    # Pre-fill data if user is editing
     return render_template('input.html', data=session.get('user_input', {}))
 
 
@@ -20,22 +22,33 @@ def process_input():
         'wrong': request.form.get('wrong'),
         'pessimism': request.form.get('pessimism')
     }
-    res = llm_logic.generate_scenarios(session['user_input'])
-    session['problems'] = res['problems']
-    session['scenarios'] = res['scenarios']
-    session['current_maze_idx'] = 0
-    session['maze_answers'] = []
-    session['history'] = []
+
+    # Generate failure scenarios
+    result = llm_logic.generate_initial_scenarios(session['user_input'])
+    if "error" in result:
+        return f"Error communicating with the future: {result.get('raw')}"
+
+    session['problems'] = result['problems']
+    session['scenarios'] = result['scenarios']
+    session['maze_index'] = 0
+    session['maze_choices'] = []
+    session['versions'] = []
+
     return redirect(url_for('maze'))
 
 
 @app.route('/maze')
 def maze():
-    idx = session.get('current_maze_idx', 0)
     scenarios = session.get('scenarios', [])
+    idx = session.get('maze_index', 0)
+
     if idx >= len(scenarios):
         return redirect(url_for('finalize_timeline'))
-    return render_template('choice.html', scenario=scenarios[idx], index=idx + 1, total=len(scenarios))
+
+    return render_template('choice.html',
+                           scenario=scenarios[idx],
+                           index=idx + 1,
+                           total=len(scenarios))
 
 
 @app.route('/process_maze', methods=['POST'])
@@ -44,38 +57,43 @@ def process_maze():
     if ans == "Other":
         ans = request.form.get('other_text')
 
-    session['maze_answers'].append(ans)
-    session['current_maze_idx'] += 1
+    session['maze_choices'].append(ans)
+    session['maze_index'] += 1
     session.modified = True
     return redirect(url_for('maze'))
 
 
 @app.route('/finalize_timeline')
 def finalize_timeline():
-    res = llm_logic.generate_refinement(session['user_input'], session['maze_answers'])
+    # Initial generation of improvements and revised plan
+    res = llm_logic.generate_dashboard_data(session['user_input'], session['maze_choices'])
 
-    new_version = {
+    version = {
         "timestamp": datetime.now().strftime("%I:%M %p"),
         "problems": session['problems'],
         "improvements": res['improvements'],
         "revised_plan": res['revised_plan'],
-        "notes": "Initial timeline generated."
+        "notes": "Initial analysis generated."
     }
 
-    if 'versions' not in session: session['versions'] = []
-    session['versions'].append(new_version)
-    session['current_v_idx'] = len(session['versions']) - 1
+    session['versions'] = [version]
+    session['current_v_idx'] = 0
     session.modified = True
     return redirect(url_for('dashboard'))
 
 
 @app.route('/dashboard')
 def dashboard():
+    versions = session.get('versions', [])
+    if not versions:
+        return redirect(url_for('index'))
+
     v_idx = session.get('current_v_idx', 0)
     return render_template('plan.html',
-                           current=session['versions'][v_idx],
-                           versions=session['versions'],
-                           user_input=session['user_input'])
+                           current=versions[v_idx],
+                           versions=versions,
+                           user_input=session['user_input'],
+                           maze_choices=session['maze_choices'])
 
 
 @app.route('/refine', methods=['POST'])
@@ -84,23 +102,32 @@ def refine():
     v_idx = session.get('current_v_idx', 0)
     current = session['versions'][v_idx]
 
-    # Collect binary feedback state
-    binary = {"liked_probs": [p['title'] for p in current['problems'] if p.get('liked')],
-              "liked_imps": [i['title'] for i in current['improvements'] if i.get('liked')]}
+    res = llm_logic.refine_analysis(session['user_input'], session['maze_choices'], current, feedback)
 
-    res = llm_logic.generate_refinement(session['user_input'], session['maze_answers'], feedback, binary)
+    if res:
+        new_version = {
+            "timestamp": datetime.now().strftime("%I:%M %p"),
+            "problems": res['problems'],
+            "improvements": res['improvements'],
+            "revised_plan": res['revised_plan'],
+            "notes": f"Refined: {feedback[:40]}..."
+        }
+        session['versions'].append(new_version)
+        session['current_v_idx'] = len(session['versions']) - 1
+        session.modified = True
 
-    new_version = {
-        "timestamp": datetime.now().strftime("%I:%M %p"),
-        "problems": current['problems'],  # Carry over current problems
-        "improvements": res['improvements'],
-        "revised_plan": res['revised_plan'],
-        "notes": f"Refinement: {feedback[:50]}..."
-    }
-    session['versions'].append(new_version)
-    session['current_v_idx'] = len(session['versions']) - 1
-    session.modified = True
     return redirect(url_for('dashboard'))
+
+
+@app.route('/feedback_binary', methods=['POST'])
+def feedback_binary():
+    # Update like/dislike state in the current version
+    data = request.json
+    v_idx = session.get('current_v_idx', 0)
+    category = 'problems' if data['type'] == 'problem' else 'improvements'
+    session['versions'][v_idx][category][data['idx']]['liked'] = data['liked']
+    session.modified = True
+    return {"status": "ok"}
 
 
 @app.route('/set_version/<int:idx>')
@@ -109,24 +136,23 @@ def set_version(idx):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/feedback_binary', methods=['POST'])
-def feedback_binary():
-    data = request.json
-    v_idx = session.get('current_v_idx', 0)
-    target = 'problems' if data['type'] == 'problem' else 'improvements'
-    session['versions'][v_idx][target][data['idx']]['liked'] = data['liked']
-    session.modified = True
-    return {"status": "ok"}
-
-
 @app.route('/followup')
 def followup():
     v_idx = session.get('current_v_idx', 0)
     current = session['versions'][v_idx]
+
     if 'followup' not in current:
-        current['followup'] = llm_logic.generate_followup(current['revised_plan'], session['user_input']['about'])
+        res = llm_logic.generate_followup(current['revised_plan'], session['user_input']['about'])
+        current['followup'] = res
         session.modified = True
+
     return render_template('followup.html', data=current['followup'], plan=current['revised_plan'])
+
+
+@app.route('/reset')
+def reset():
+    session.clear()
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
