@@ -1,51 +1,44 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="max-w-3xl mx-auto pt-8">
-    
     <div class="flex items-center justify-between mb-6">
         <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Scenario Maze</span>
-        <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
-            Obstacle {{ index }} / {{ total }}
-        </span>
+        <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">Obstacle {{ index }} / {{ total }}</span>
     </div>
 
     <!-- Scenario Card -->
     <div class="bg-white rounded-3xl shadow-xl shadow-red-100/50 border border-red-100 overflow-hidden mb-10">
         <div class="bg-red-50/50 px-8 py-6 border-b border-red-100 flex items-center gap-4">
-            <div class="p-3 bg-red-100 text-red-600 rounded-xl">
-                <i data-lucide="siren" class="w-8 h-8"></i>
-            </div>
+            <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="siren" class="w-8 h-8"></i></div>
             <div>
                 <h2 class="text-lg font-bold text-red-900">{{ scenario.title }}</h2>
-                <p class="text-sm text-red-700 font-medium">Reporting from the Failed Timeline</p>
+                <p class="text-sm text-red-700 font-medium italic">Communication from Failed Timeline</p>
             </div>
         </div>
-
         <div class="p-8 md:p-10">
-            <h3 class="text-2xl font-bold text-slate-900 mb-6 leading-tight">{{ scenario.description }}</h3>
+            <h3 class="text-2xl font-bold text-slate-900 leading-tight">{{ scenario.desc }}</h3>
         </div>
     </div>
 
-    <form action="/process_choice" method="POST">
+    <form action="/process_maze" method="POST">
         <h4 class="text-xl font-bold text-slate-900 mb-6 px-2">What would you have done to prepare?</h4>
 
         <div class="space-y-4">
             {% for option in scenario.options %}
-            <label class="relative group block cursor-pointer">
-                <input type="radio" name="contingency" value="{{ option }}" class="peer sr-only" {% if loop.first %}checked{% endif %} onclick="toggleOther(this.value)">
-
-                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10">
+            <label class="block cursor-pointer">
+                <input type="radio" name="choice" value="{{ option }}" class="peer sr-only" {% if loop.first %}checked{% endif %} onclick="document.getElementById('other-box').classList.add('hidden')">
+                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 transition-all">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="font-bold text-slate-800">{{ option.split('[')[0] }}</span>
-                        <div class="w-5 h-5 rounded-full border border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600"></div>
+                        <span class="font-bold text-slate-800">{{ option.split('[')[0].strip() }}</span>
+                        <div class="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-indigo-600 flex items-center justify-center">
+                            <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100"></div>
+                        </div>
                     </div>
-
                     {% if '[' in option %}
-                    <div class="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
+                    <div class="flex gap-4">
                         {% set scores = option.split('[')[1].replace(']', '').split(',') %}
-                        {% for score in scores %}
-                        <span class="text-slate-400">{{ score.strip() }}</span>
+                        {% for s in scores %}
+                        <span class="text-[10px] font-bold uppercase tracking-widest bg-slate-100 px-2 py-1 rounded text-slate-500">{{ s.strip() }}</span>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -53,29 +46,23 @@
             </label>
             {% endfor %}
 
-            <label class="relative group block cursor-pointer">
-                <input type="radio" name="contingency" value="Other" class="peer sr-only" onclick="toggleOther(this.value)">
-                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 transition-all peer-checked:border-indigo-600">
-                    <span class="font-bold text-slate-800">Other (Free Text)</span>
+            <label class="block cursor-pointer">
+                <input type="radio" name="choice" value="Other" class="peer sr-only" onclick="document.getElementById('other-box').classList.remove('hidden')">
+                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 transition-all">
+                    <span class="font-bold text-slate-800">Other (Your own solution)</span>
                 </div>
             </label>
         </div>
 
-        <div id="other-input" class="mt-4 hidden">
-            <input type="text" name="custom_text" class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 shadow-sm" placeholder="Type your strategic patch...">
+        <div id="other-box" class="mt-4 hidden fade-in">
+            <textarea name="other_text" class="w-full h-32 p-4 border-2 border-indigo-100 rounded-2xl text-sm focus:ring-0 focus:border-indigo-600" placeholder="Type your strategic patch..."></textarea>
         </div>
 
         <div class="mt-10 flex justify-end">
-            <button type="submit" class="px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+            <button type="submit" class="px-10 py-5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 flex items-center gap-3">
                 {{ 'Seal Timeline' if index == total else 'Next Obstacle' }} <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </button>
         </div>
     </form>
 </div>
-
-<script>
-    function toggleOther(value) {
-        document.getElementById('other-input').classList.toggle('hidden', value !== 'Other');
-    }
-</script>
 {% endblock %}
