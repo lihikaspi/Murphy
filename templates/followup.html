@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-10">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Execution Mode</h1>
+        <p class="text-slate-500">Transforming your revised plan into a concrete timeline.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Checklist -->
+        <div class="lg:col-span-2 space-y-6">
+            <h2 class="text-xl font-bold flex items-center gap-2"><i data-lucide="check-square" class="w-5 h-5 text-indigo-600"></i> Task Checklist</h2>
+            <div class="space-y-4">
+                {% for task in data.tasks %}
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4 hover:border-indigo-200 transition-colors">
+                    <input type="checkbox" class="mt-1 w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <h4 class="font-bold text-slate-900">{{ task.title }}</h4>
+                            <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold">{{ task.duration }}</span>
+                        </div>
+                        <p class="text-sm text-slate-500">{{ task.instruction }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sidebar Advice -->
+        <div class="space-y-8">
+            <div class="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden">
+                <i data-lucide="quote" class="absolute -top-2 -right-2 w-16 h-16 text-white/10"></i>
+                <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Traveler's Advice</h3>
+                <p class="text-sm text-slate-300 italic leading-relaxed">
+                    "{{ data.advice }}"
+                </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-slate-200">
+                <h3 class="font-bold text-sm mb-4">Final Revised Plan</h3>
+                <div class="text-[11px] text-slate-500 leading-relaxed max-h-48 overflow-y-auto custom-scroll">
+                    {{ plan }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

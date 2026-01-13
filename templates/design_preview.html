@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murphy - Multi-Stage Preview</title>
+    <title>Murphy - Interface Preview</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,457 +12,399 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; overflow-x: hidden; }
 
-        /* Animations */
-        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hidden-view { display: none; }
 
         /* Custom Scrollbar */
-        .custom-scroll::-webkit-scrollbar, textarea::-webkit-scrollbar { width: 8px; }
-        .custom-scroll::-webkit-scrollbar-track, textarea::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb, textarea::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover, textarea::-webkit-scrollbar-thumb { background-color: #94A3B8; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 
-        /* Utilities */
+        .quadrant-card { height: 24rem; display: flex; flex-direction: column; overflow: hidden; }
         .hover-card { transition: all 0.2s ease; }
-        .hover-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .hidden-view { display: none; }
-        .nav-active { background-color: #F8FAFC; color: #0F172A; }
+        .hover-card:hover { transform: translateY(-2px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.05); }
+
+        .nav-active { background-color: #F1F5F9; color: #0F172A; }
         .nav-inactive { color: #64748B; }
-        .nav-inactive:hover { color: #0F172A; background-color: #F8FAFC; }
+
+        .feedback-btn-active { background-color: white; border-color: currentColor; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
     </style>
 </head>
 <body class="flex min-h-screen text-slate-900">
 
-    <!-- Sidebar -->
+    <!-- Persistent Sidebar -->
     <aside class="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col fixed inset-y-0 z-50">
         <div class="p-8 pb-4">
-            <div class="flex items-center gap-3 text-slate-900 mb-8">
-                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-slate-200">M</div>
+            <div class="flex items-center gap-3 text-slate-900 mb-10">
+                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">M</div>
                 <span class="text-2xl font-bold tracking-tight">Murphy</span>
             </div>
 
             <nav class="space-y-1">
-                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-3">Session</div>
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-3">Workflow Phases</div>
 
-                <button id="nav-input" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-active">
-                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Input Strategy
+                <button id="btn-input" onclick="showView('view-input')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-active">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Strategy Input
                 </button>
 
-                <button id="nav-choice" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-inactive">
-                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Simulation
+                <button id="btn-maze" onclick="showView('view-maze')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-inactive">
+                    <i data-lucide="split" class="w-4 h-4"></i> Scenario Maze
                 </button>
 
-                <button id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-inactive">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Final Dashboard
+                <button id="btn-dashboard" onclick="showView('view-dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-inactive">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Analysis Dashboard
+                </button>
+
+                <button id="btn-followup" onclick="showView('view-followup')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors nav-inactive">
+                    <i data-lucide="clipboard-check" class="w-4 h-4"></i> Execution Plan
                 </button>
             </nav>
         </div>
 
         <div class="mt-auto p-6 border-t border-slate-100">
-            <div class="flex items-center justify-center gap-2 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-500">
-                <i data-lucide="eye" class="w-3 h-3"></i> Interactive Preview
-            </div>
+            <button onclick="location.reload()" class="flex items-center justify-center gap-2 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reset Preview
+            </button>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 md:ml-72 min-h-screen bg-[#F8FAFC]">
+    <!-- Main Content Area -->
+    <main class="flex-1 md:ml-72 min-h-screen">
         <div class="p-6 md:p-12 max-w-7xl mx-auto">
 
-            <!-- VIEW 1: INPUT -->
-            <div id="view-input" class="fade-in">
-                <div class="max-w-4xl mx-auto">
-                    <div class="mb-10">
-                        <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">Stress-Test Your Strategy</h1>
-                        <p class="text-lg text-slate-500">Tell Murphy your ambitious plans, and we'll calculate exactly how they might fail.</p>
+            <!-- PHASE 1: INPUT MODULE (Revised Column Layout) -->
+            <section id="view-input" class="fade-in max-w-3xl mx-auto">
+                <div class="mb-10 text-center md:text-left">
+                    <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">Stress-Test Your Strategy</h1>
+                    <p class="text-lg text-slate-500">Murphy reports failure scenarios from your future timeline.</p>
+                </div>
+
+                <div class="space-y-6 mb-10">
+                    <!-- User Info -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                            <span class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-indigo-500"></i> User Information <span class="text-red-500 font-bold ml-1">*</span></span>
+                        </label>
+                        <textarea required class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" placeholder="e.g. I am a solo developer with 5 years experience..."></textarea>
+                    </div>
+
+                    <!-- Purpose -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                            <span class="flex items-center gap-2"><i data-lucide="target" class="w-4 h-4 text-emerald-500"></i> The Goal / Purpose <span class="text-red-500 font-bold ml-1">*</span></span>
+                        </label>
+                        <textarea required class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all" placeholder="e.g. To reach $2k in monthly recurring revenue..."></textarea>
+                    </div>
+
+                    <!-- Plan -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                            <span class="flex items-center gap-2"><i data-lucide="map" class="w-4 h-4 text-blue-500"></i> The Current Plan <span class="text-red-500 font-bold ml-1">*</span></span>
+                        </label>
+                        <textarea required class="w-full h-40 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" placeholder="Step 1: Build landing page...&#10;Step 2: Start cold outreach..."></textarea>
+                    </div>
+
+                    <!-- Self-Reflection (OPTIONAL) -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                            <span class="flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i> Self-Reflection / Concerns</span>
+                        </label>
+                        <textarea class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all" placeholder="What keeps you up at night about this plan? (Optional)"></textarea>
+                    </div>
+                </div>
+
+                <!-- Footer Control Bar -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-8 sticky bottom-6 z-30">
+                    <div class="w-full md:w-2/3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Murphy's Law Severity</label>
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none cursor-pointer">
+                                <option>Optimistic (Minor Hiccups)</option>
+                                <option>Slightly Concerned (Real Risks)</option>
+                                <option selected>Realistic (Standard Failure Rates)</option>
+                                <option>Pessimistic (Critical Obstacles)</option>
+                                <option>Total Chaos (Black Swan Events)</option>
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="showView('view-maze')" class="w-full md:w-auto px-10 py-5 bg-slate-900 text-white font-bold rounded-xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
+                        Run Simulation <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- PHASE 2: SCENARIO MAZE -->
+            <section id="view-maze" class="hidden-view fade-in max-w-3xl mx-auto">
+                <div class="flex items-center justify-between mb-8">
+                    <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Scenario Maze</span>
+                    <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">Obstacle 1 / 3</span>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-xl shadow-red-100/50 border border-red-100 overflow-hidden mb-10">
+                    <div class="bg-red-50/50 px-8 py-6 border-b border-red-100 flex items-center gap-4">
+                        <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="siren" class="w-8 h-8"></i></div>
+                        <div>
+                            <h2 class="text-lg font-bold text-red-900">The Dependency Trap</h2>
+                            <p class="text-sm text-red-700 font-medium">Reporting from the Failed Timeline</p>
+                        </div>
+                    </div>
+                    <div class="p-8 md:p-10">
+                        <h3 class="text-2xl font-bold text-slate-900 leading-tight">Your primary API vendor changes their pricing model overnight, increasing your costs by 400%.</h3>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <h4 class="text-xl font-bold text-slate-900 mb-6 px-2">How would you have prepared?</h4>
+
+                    <label class="block cursor-pointer group">
+                        <input type="radio" name="maze" class="peer sr-only" onclick="toggleMazeOther(false)">
+                        <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold text-slate-800">Abstract all logic behind a service interface.</span>
+                                <div class="w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center peer-checked:border-indigo-600">
+                                    <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-[10px] font-bold uppercase tracking-widest bg-slate-100 px-2 py-1 rounded text-slate-500">Stress: 4</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest bg-emerald-100 px-2 py-1 rounded text-emerald-600">Feasibility: 9</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="block cursor-pointer group">
+                        <input type="radio" name="maze" class="peer sr-only" onclick="toggleMazeOther(true)">
+                        <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-800">Other Strategy (Write your own)</span>
+                                <div class="w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center peer-checked:border-indigo-600">
+                                    <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Functional Other Textbox -->
+                <div id="maze-other-container" class="hidden mb-10 fade-in">
+                    <textarea class="w-full h-32 p-4 bg-white border border-indigo-200 rounded-2xl text-sm shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Describe your prepared contingency..."></textarea>
+                </div>
+
+                <div class="flex justify-end mt-10">
+                    <button onclick="showView('view-dashboard')" class="px-10 py-5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-3">
+                        Seal Timeline <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- PHASE 3: OUTPUT DASHBOARD -->
+            <section id="view-dashboard" class="hidden-view fade-in">
+                <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-slate-200 pb-8">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Analysis Active</span>
+                        </div>
+                        <h1 class="text-3xl font-extrabold text-slate-900">Strategic Fortification Dashboard</h1>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="showView('view-followup')" class="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-colors">
+                            <i data-lucide="play" class="w-4 h-4"></i> Execute Plan
+                        </button>
+                    </div>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 quadrant-card">
+                        <div class="px-6 py-4 border-b bg-slate-50/50 font-bold text-slate-700 text-sm flex items-center gap-2 uppercase tracking-wider">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Original Plan
+                        </div>
+                        <div class="p-6 overflow-y-auto text-sm text-slate-500 italic">
+                            1. Launch MVP in 2 weeks.<br>
+                            2. Post on Product Hunt.<br>
+                            3. Run $500 in LinkedIn ads.
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-red-100 quadrant-card">
+                        <div class="px-6 py-4 border-b bg-red-50/30 font-bold text-red-700 text-sm flex items-center gap-2 uppercase tracking-wider">
+                            <i data-lucide="alert-octagon" class="w-4 h-4"></i> Critical Weaknesses
+                        </div>
+                        <div class="p-6 overflow-y-auto space-y-4">
+                            <div class="p-4 bg-red-50/20 rounded-xl border border-red-50 flex justify-between gap-4">
+                                <div>
+                                    <h4 class="font-bold text-red-900 text-sm mb-1">Pricing Dependency</h4>
+                                    <p class="text-xs text-slate-600">Vulnerability to external vendor price hikes.</p>
+                                </div>
+                                <div class="flex gap-2 shrink-0">
+                                    <button onclick="handleBinaryFeedback(this, 'like')" class="p-1.5 text-slate-300 hover:text-green-600 rounded-md border border-transparent transition-all"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
+                                    <button onclick="handleBinaryFeedback(this, 'dislike')" class="p-1.5 text-slate-300 hover:text-red-600 rounded-md border border-transparent transition-all"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 quadrant-card">
+                        <div class="px-6 py-4 border-b bg-indigo-50/30 font-bold text-indigo-700 text-sm flex items-center gap-2 uppercase tracking-wider">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> Revised Strategy
+                        </div>
+                        <div class="p-6 overflow-y-auto text-sm text-slate-800 leading-relaxed font-medium">
+                            The new strategy focuses on architectural resilience...
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 quadrant-card">
+                        <div class="px-6 py-4 border-b bg-emerald-50/30 font-bold text-emerald-700 text-sm flex items-center gap-2 uppercase tracking-wider">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Implementation Intentions
+                        </div>
+                        <div class="p-6 overflow-y-auto space-y-4">
+                            <div class="p-4 bg-emerald-50/20 rounded-xl border border-emerald-50 flex justify-between gap-4">
+                                <div>
+                                    <h4 class="font-bold text-emerald-900 text-sm mb-1">Decoupled Ops</h4>
+                                    <p class="text-xs text-slate-600">IF costs rise, THEN switch to local LLM node.</p>
+                                </div>
+                                <div class="flex gap-2 shrink-0">
+                                    <button onclick="handleBinaryFeedback(this, 'like')" class="p-1.5 text-slate-300 hover:text-green-600 rounded-md border border-transparent transition-all"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
+                                    <button onclick="handleBinaryFeedback(this, 'dislike')" class="p-1.5 text-slate-300 hover:text-red-600 rounded-md border border-transparent transition-all"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="bg-slate-900 rounded-3xl p-10 text-white flex flex-col md:flex-row gap-12 overflow-hidden relative">
+                    <i data-lucide="message-square" class="absolute -top-10 -right-10 w-48 h-48 text-white/5"></i>
+
+                    <!-- Feedback Form -->
+                    <div class="flex-1 relative z-10">
+                        <h3 class="text-2xl font-bold mb-4">Refine the Timeline</h3>
+                        <p class="text-slate-400 text-sm mb-6">Give Murphy additional constraints and regenerate.</p>
+                        <textarea class="w-full h-32 bg-white/10 border border-white/20 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none mb-4" placeholder="e.g. Find zero-cost marketing tactics instead..."></textarea>
+                        <button class="px-8 py-4 bg-indigo-600 rounded-xl font-bold hover:bg-indigo-500 transition-all">Update Analysis</button>
+                    </div>
+
+                    <!-- Update & Notes History -->
+                    <div class="w-full md:w-80 relative z-10">
+                        <h4 class="font-bold text-slate-300 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Notes History</h4>
+                        <div class="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scroll">
+                            <!-- History Item 1 (Newest) -->
+                            <div class="border-l-2 border-indigo-500 pl-4">
+                                <span class="text-[10px] text-slate-500 font-bold block mb-1">JAN 13, 11:55 AM</span>
+                                <p class="text-xs text-slate-300 leading-relaxed">"Revised plan to include zero-budget marketing as requested. Swapped LinkedIn ads for community building."</p>
+                            </div>
+
+                            <!-- History Item 2 -->
+                            <div class="border-l-2 border-slate-700 pl-4 opacity-70">
+                                <span class="text-[10px] text-slate-500 font-bold block mb-1">JAN 13, 11:42 AM</span>
+                                <p class="text-xs text-slate-300 leading-relaxed">"Updated 'Implementation Intentions' to address dependency trap. Added local LLM fallback guideline."</p>
+                            </div>
+
+                            <!-- History Item 3 -->
+                            <div class="border-l-2 border-slate-800 pl-4 opacity-40">
+                                <span class="text-[10px] text-slate-500 font-bold block mb-1">JAN 13, 11:30 AM</span>
+                                <p class="text-xs text-slate-300 leading-relaxed">"Initial timeline generated. Critical weaknesses identified in API dependency and churn rates."</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- PHASE 4: FOLLOW-UP DASHBOARD -->
+            <section id="view-followup" class="hidden-view fade-in">
+                <div class="mb-10">
+                    <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Execution Protocol</h1>
+                    <p class="text-slate-500">Transforming your revised plan into a concrete timeline.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <div class="lg:col-span-2 space-y-6">
+                        <h2 class="text-xl font-bold flex items-center gap-2"><i data-lucide="list-checks" class="w-5 h-5 text-indigo-600"></i> Actionable Tasks</h2>
+                        <div class="space-y-4">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-slate-300 text-indigo-600">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h4 class="font-bold text-slate-900">Audit API Endpoints</h4>
+                                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded font-bold text-slate-500">2 Hours</span>
+                                    </div>
+                                    <p class="text-sm text-slate-500">Identify all hardcoded vendor URLs and prepare to move them to environment variables.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-8">
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover-card">
-                                    <label class="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider mb-4"><i data-lucide="user" class="w-4 h-4 text-indigo-500"></i> Context</label>
-                                    <textarea class="w-full h-32 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm" placeholder="I am a solo founder..."></textarea>
-                                </div>
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover-card">
-                                    <label class="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider mb-4"><i data-lucide="target" class="w-4 h-4 text-emerald-500"></i> The Goal</label>
-                                    <textarea class="w-full h-32 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm" placeholder="Reach $10k MRR..."></textarea>
-                                </div>
-                            </div>
-                            <div class="space-y-8">
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover-card">
-                                    <label class="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider mb-4"><i data-lucide="map" class="w-4 h-4 text-blue-500"></i> The Plan</label>
-                                    <textarea class="w-full h-32 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm" placeholder="1. Build MVP..."></textarea>
-                                </div>
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover-card">
-                                    <label class="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider mb-4"><i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i> Known Risks</label>
-                                    <textarea class="w-full h-32 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm" placeholder="No marketing budget..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-4 rounded-2xl shadow-lg border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 sticky bottom-6 z-30">
-                            <div class="w-full md:w-1/3 px-4">
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Murphy's Law Level</label>
-                                <input type="range" min="1" max="5" value="3" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-slate-900">
-                            </div>
-                            <button onclick="startSimulation()" class="w-full md:w-auto px-8 py-4 bg-slate-900 text-white font-bold rounded-xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3">Run Simulation <i data-lucide="arrow-right" class="w-5 h-5"></i></button>
+                        <div class="bg-indigo-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-indigo-100">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i data-lucide="zap" class="w-5 h-5 text-amber-300"></i> Traveler's Advice</h3>
+                            <p class="text-indigo-50 font-medium italic leading-relaxed text-sm">
+                                "Neutralize the pricing signals now, and you prevent the bankruptcy of October. Stay on this track."
+                            </p>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- VIEW 2: CHOICE (Dynamic) -->
-            <div id="view-choice" class="hidden-view fade-in">
-                <div class="max-w-3xl mx-auto pt-8">
-
-                    <!-- Progress Bar -->
-                    <div class="flex items-center justify-between mb-6">
-                        <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Simulation In Progress</span>
-                        <span id="scenario-counter" class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">Scenario 1 / 3</span>
-                    </div>
-
-                    <!-- Scenario Card -->
-                    <div id="scenario-card" class="bg-white rounded-3xl shadow-xl shadow-red-100/50 border border-red-100 overflow-hidden mb-10">
-                        <div class="bg-red-50/50 px-8 py-6 border-b border-red-100 flex items-center gap-4">
-                            <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="siren" class="w-8 h-8"></i></div>
-                            <div>
-                                <h2 id="scenario-title" class="text-lg font-bold text-red-900">Scenario Title Here</h2>
-                                <p class="text-sm text-red-700 font-medium">Probability: High | Severity: Critical</p>
-                            </div>
-                        </div>
-                        <div class="p-8 md:p-10">
-                            <h3 id="scenario-desc" class="text-2xl font-bold text-slate-900 mb-6 leading-tight">Description here...</h3>
-                            <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 flex gap-4">
-                                <i data-lucide="trending-down" class="w-6 h-6 text-slate-400 shrink-0"></i>
-                                <div>
-                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Immediate Consequence</span>
-                                    <p id="scenario-cons" class="text-slate-700 font-medium mt-1">Consequence here...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Options -->
-                    <div>
-                        <h4 class="text-xl font-bold text-slate-900 mb-6 px-2">How do you respond?</h4>
-                        <div class="space-y-4">
-                            <!-- Option 1 -->
-                            <label class="relative group block cursor-pointer">
-                                <input type="radio" name="contingency" class="peer sr-only">
-                                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 flex items-center justify-between">
-                                    <span id="opt-1-text" class="font-semibold text-slate-700 peer-checked:text-indigo-900">Option 1</span>
-                                    <div class="w-5 h-5 rounded-full border border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600"></div>
-                                </div>
-                            </label>
-                            <!-- Option 2 -->
-                            <label class="relative group block cursor-pointer">
-                                <input type="radio" name="contingency" class="peer sr-only">
-                                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 flex items-center justify-between">
-                                    <span id="opt-2-text" class="font-semibold text-slate-700 peer-checked:text-indigo-900">Option 2</span>
-                                    <div class="w-5 h-5 rounded-full border border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600"></div>
-                                </div>
-                            </label>
-                            <!-- Option 3 -->
-                            <label class="relative group block cursor-pointer">
-                                <input type="radio" name="contingency" class="peer sr-only">
-                                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 flex items-center justify-between">
-                                    <span id="opt-3-text" class="font-semibold text-slate-700 peer-checked:text-indigo-900">Option 3</span>
-                                    <div class="w-5 h-5 rounded-full border border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600"></div>
-                                </div>
-                            </label>
-                            <!-- Other -->
-                            <label class="relative group block cursor-pointer">
-                                <input type="radio" name="contingency" class="peer sr-only" onclick="document.getElementById('other-input').classList.remove('hidden')">
-                                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 flex items-center justify-between">
-                                    <span class="font-semibold text-slate-700 peer-checked:text-indigo-900">Other Strategy...</span>
-                                    <div class="w-5 h-5 rounded-full border border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600"></div>
-                                </div>
-                            </label>
-                        </div>
-                        <div id="other-input" class="mt-4 hidden"><input type="text" class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 shadow-sm" placeholder="Type your specific plan..."></div>
-
-                        <div class="mt-10 flex justify-end">
-                            <button onclick="nextScenario()" id="next-btn" class="px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
-                                Next Scenario <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW 3: DASHBOARD -->
-            <div id="view-dashboard" class="hidden-view fade-in">
-                <div class="max-w-7xl mx-auto pb-16">
-                    <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-slate-200 pb-8">
-                        <div>
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase tracking-wide">Analysis Complete</span>
-                            </div>
-                            <h1 class="text-3xl font-extrabold text-slate-900">Strategic Fortification Dashboard</h1>
-                        </div>
-                        <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> PDF</button>
-                    </header>
-
-                    <!-- 1. The 2x2 Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                        <!-- Q1: Original Plan -->
-                        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[28rem]">
-                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                                <h3 class="font-bold text-slate-700 flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Original Plan</h3>
-                            </div>
-                            <div class="p-6 overflow-y-auto custom-scroll flex-1"><p class="text-slate-600 whitespace-pre-wrap text-sm leading-relaxed">1. Build MVP in 2 weeks
-2. Launch on Product Hunt
-3. Cold email 100 leads per day...</p></div>
-                        </section>
-
-                        <!-- Q2: Critical Risks (Restored) -->
-                        <section class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden flex flex-col h-[28rem]">
-                             <div class="px-6 py-4 border-b border-red-100 bg-red-50/30 flex items-center justify-between">
-                                <h3 class="font-bold text-red-700 flex items-center gap-2"><i data-lucide="alert-octagon" class="w-4 h-4"></i> Critical Weaknesses</h3>
-                            </div>
-                            <div class="p-6 overflow-y-auto custom-scroll flex-1">
-                                <ul class="list-disc list-inside space-y-2 text-slate-800 text-sm leading-6">
-                                    <li>Heavy reliance on external pricing models.</li>
-                                    <li>Single point of failure in database architecture.</li>
-                                    <li>Lack of legal contingency for IP disputes.</li>
-                                    <li>No budget allocation for customer acquisition cost spikes.</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <!-- Q3: Revised Strategy -->
-                        <section class="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden flex flex-col h-[28rem]">
-                            <div class="px-6 py-4 border-b border-indigo-100 bg-indigo-50/30 flex items-center justify-between">
-                                <h3 class="font-bold text-indigo-700 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Revised Strategy</h3>
-                            </div>
-                            <div class="p-6 overflow-y-auto custom-scroll flex-1"><p class="text-slate-800 whitespace-pre-wrap text-sm leading-7">REVISED STRATEGY:
-1. Abstract all external dependencies behind a service interface.
-2. Build MVP with added redundancy.
-3. Maintain a 3-month runway cash reserve.
-4. Implement chaotic testing for database.</p></div>
-                        </section>
-
-                        <!-- Q4: Actions -->
-                        <section class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden flex flex-col h-[28rem]">
-                            <div class="px-6 py-4 border-b border-emerald-100 bg-emerald-50/30 flex items-center justify-between">
-                                <h3 class="font-bold text-emerald-700 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Immediate Actions</h3>
-                            </div>
-                            <div class="p-6 overflow-y-auto custom-scroll flex-1"><p class="text-slate-800 whitespace-pre-wrap text-sm leading-7">ACTION ITEMS:
-- Audit all 3rd party SLAs.
-- Implement 'Adapter Pattern' in codebase.
-- Establish legal defense fund.
-- Diversify API vendors.</p></div>
-                        </section>
-                    </div>
-
-                    <!-- 2. Simulation Recap (Scenarios & Choices) -->
-                    <section class="mb-12">
-                        <div class="flex items-center gap-3 mb-6">
-                            <h2 class="text-xl font-bold text-slate-900">Simulation Recap</h2>
-                            <div class="h-px bg-slate-200 flex-1"></div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Card 1 -->
-                            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <div class="p-1.5 bg-red-100 text-red-600 rounded-lg"><i data-lucide="siren" class="w-4 h-4"></i></div>
-                                    <span class="text-xs font-bold text-slate-400 uppercase">Scenario 01</span>
-                                </div>
-                                <h4 class="font-bold text-slate-800 mb-2">Dependency Trap</h4>
-                                <div class="text-xs font-semibold text-slate-500 uppercase mb-1">Your Choice:</div>
-                                <p class="text-sm text-indigo-700 font-medium">Pivot to open-source alternative</p>
-                            </div>
-
-                            <!-- Card 2 -->
-                            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <div class="p-1.5 bg-red-100 text-red-600 rounded-lg"><i data-lucide="bug" class="w-4 h-4"></i></div>
-                                    <span class="text-xs font-bold text-slate-400 uppercase">Scenario 02</span>
-                                </div>
-                                <h4 class="font-bold text-slate-800 mb-2">The Silent Bug</h4>
-                                <div class="text-xs font-semibold text-slate-500 uppercase mb-1">Your Choice:</div>
-                                <p class="text-sm text-indigo-700 font-medium">Rollback and restore (24hr downtime)</p>
-                            </div>
-
-                            <!-- Card 3 -->
-                            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <div class="p-1.5 bg-red-100 text-red-600 rounded-lg"><i data-lucide="gavel" class="w-4 h-4"></i></div>
-                                    <span class="text-xs font-bold text-slate-400 uppercase">Scenario 03</span>
-                                </div>
-                                <h4 class="font-bold text-slate-800 mb-2">Legal Ambush</h4>
-                                <div class="text-xs font-semibold text-slate-500 uppercase mb-1">Your Choice:</div>
-                                <p class="text-sm text-indigo-700 font-medium">Pivot product direction</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- 3. Refinement & Feedback Section -->
-                    <section class="bg-slate-900 rounded-3xl p-8 md:p-10 text-white relative overflow-hidden">
-                        <!-- Decorative bg -->
-                        <div class="absolute top-0 right-0 p-12 opacity-10">
-                            <i data-lucide="message-square-dashed" class="w-64 h-64 text-white"></i>
-                        </div>
-
-                        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
-                            <!-- Column 1: Input Form -->
-                            <div>
-                                <div class="flex items-center gap-3 mb-6">
-                                    <div class="p-2 bg-indigo-500 rounded-lg text-white"><i data-lucide="sliders" class="w-5 h-5"></i></div>
-                                    <h2 class="text-2xl font-bold">Refine Analysis</h2>
-                                </div>
-                                <p class="text-slate-400 mb-6 text-sm leading-relaxed">Not satisfied? Tell Murphy to adjust the parameters. Adding new constraints will regenerate the Action Plan.</p>
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Your Feedback</label>
-                                        <textarea class="w-full h-32 bg-slate-800 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="e.g. 'This is too expensive, find a cheaper alternative' or 'Assume we have 2 more developers'"></textarea>
-                                    </div>
-
-                                    <div class="flex gap-4">
-                                        <div class="flex-1">
-                                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Pessimism</label>
-                                            <select class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
-                                                <option>Cautious (Lvl 3)</option>
-                                                <option>Pessimistic (Lvl 4)</option>
-                                                <option>Catastrophic (Lvl 5)</option>
-                                            </select>
-                                        </div>
-                                        <div class="flex items-end">
-                                            <button class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-900/50">
-                                                Update Dashboard <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Column 2: History Log -->
-                            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-bold text-slate-300 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-slate-500"></i> Feedback History</h3>
-                                    <span class="text-xs bg-slate-700 text-slate-400 px-2 py-1 rounded">2 Updates</span>
-                                </div>
-
-                                <div class="space-y-4 max-h-[300px] overflow-y-auto custom-scroll pr-2">
-                                    <!-- Log Item 1 -->
-                                    <div class="border-l-2 border-indigo-500 pl-4 py-1">
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-slate-400">Today, 10:42 AM</span>
-                                            <span class="text-indigo-400 font-mono">Lvl 4</span>
-                                        </div>
-                                        <p class="text-sm text-slate-200">"Make the revised plan focus more on zero-budget marketing tactics."</p>
-                                    </div>
-
-                                    <!-- Log Item 2 -->
-                                    <div class="border-l-2 border-slate-600 pl-4 py-1 opacity-60">
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-slate-500">Today, 10:30 AM</span>
-                                            <span class="text-slate-400 font-mono">Lvl 3</span>
-                                        </div>
-                                        <p class="text-sm text-slate-300">"Initial generation."</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
-            </div>
+            </section>
 
         </div>
     </main>
 
-    <!-- LOGIC -->
     <script>
         lucide.createIcons();
 
-        // Mock Data for the 3 Steps
-        const scenarios = [
-            {
-                title: "The Dependency Trap",
-                desc: "Your plan relies heavily on a specific API. Two days before launch, they change their pricing model, making your unit economics negative.",
-                cons: "Instant insolvency if not mitigated within 48 hours.",
-                opts: ["Absorb the cost temporarily", "Emergency rewrite (Delay 2 weeks)", "Pass cost to users"]
-            },
-            {
-                title: "The Silent Bug",
-                desc: "A race condition in your database that wasn't caught in testing corrupts 5% of user data during the initial onboarding surge.",
-                cons: "Permanent loss of trust from early adopters.",
-                opts: ["Rollback and restore (24hr downtime)", "Manual data patching (High labor)", "Ignore and fix forward"]
-            },
-            {
-                title: "Legal Ambush",
-                desc: "A competitor issues a cease-and-desist letter claiming your core feature infringes on a vague patent they hold.",
-                cons: "Potential lawsuit draining 100% of runway.",
-                opts: ["Comply and remove feature", "Fight it in court", "Pivot product direction"]
-            }
-        ];
+        function showView(viewId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden-view'));
+            const target = document.getElementById(viewId);
+            target.classList.remove('hidden-view');
+            target.classList.add('fade-in');
 
-        let currentIndex = 0;
-
-        function switchView(id) {
-            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden-view'));
-            document.getElementById(id).classList.remove('hidden-view');
-
-            // Nav styling
-            const navMap = {'view-input': 'nav-input', 'view-choice': 'nav-choice', 'view-dashboard': 'nav-dashboard'};
-            document.querySelectorAll('aside button').forEach(btn => btn.classList.replace('nav-active', 'nav-inactive'));
-            if(navMap[id]) document.getElementById(navMap[id]).classList.replace('nav-inactive', 'nav-active');
+            document.querySelectorAll('aside button').forEach(btn => {
+                btn.classList.remove('nav-active');
+                btn.classList.add('nav-inactive');
+            });
+            const btnId = 'btn-' + viewId.split('-')[1];
+            const activeBtn = document.getElementById(btnId);
+            if (activeBtn) activeBtn.classList.replace('nav-inactive', 'nav-active');
 
             window.scrollTo(0,0);
         }
 
-        function startSimulation() {
-            currentIndex = 0;
-            renderScenario(0);
-            switchView('view-choice');
-        }
-
-        function renderScenario(idx) {
-            const data = scenarios[idx];
-            document.getElementById('scenario-counter').innerText = `Scenario ${idx + 1} / 3`;
-            document.getElementById('scenario-title').innerText = data.title;
-            document.getElementById('scenario-desc').innerText = data.desc;
-            document.getElementById('scenario-cons').innerText = data.cons;
-
-            document.getElementById('opt-1-text').innerText = data.opts[0];
-            document.getElementById('opt-2-text').innerText = data.opts[1];
-            document.getElementById('opt-3-text').innerText = data.opts[2];
-
-            // Reset radio buttons
-            document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-            document.getElementById('other-input').classList.add('hidden');
-
-            // Button Text
-            const btn = document.getElementById('next-btn');
-            if (idx === 2) {
-                btn.innerHTML = `Complete Simulation <i data-lucide="check-circle" class="w-5 h-5"></i>`;
+        // Functional Maze "Other" logic
+        function toggleMazeOther(show) {
+            const container = document.getElementById('maze-other-container');
+            if(show) {
+                container.classList.remove('hidden');
+                container.querySelector('textarea').focus();
             } else {
-                btn.innerHTML = `Next Scenario <i data-lucide="arrow-right" class="w-5 h-5"></i>`;
+                container.classList.add('hidden');
             }
-            lucide.createIcons();
-
-            // Re-trigger animation
-            const card = document.getElementById('view-choice');
-            card.classList.remove('fade-in');
-            void card.offsetWidth; // trigger reflow
-            card.classList.add('fade-in');
         }
 
-        function nextScenario() {
-            currentIndex++;
-            if (currentIndex < scenarios.length) {
-                renderScenario(currentIndex);
+        // Functional Binary Feedback Toggle
+        function handleBinaryFeedback(button, type) {
+            const parent = button.parentElement;
+            const buttons = parent.querySelectorAll('button');
+
+            // Remove active state from all
+            buttons.forEach(btn => btn.classList.remove('feedback-btn-active', 'text-green-600', 'text-red-600'));
+            buttons.forEach(btn => btn.classList.add('text-slate-300'));
+
+            // Set active state
+            button.classList.add('feedback-btn-active');
+            button.classList.remove('text-slate-300');
+
+            if (type === 'like') {
+                button.classList.add('text-green-600');
             } else {
-                switchView('view-dashboard');
+                button.classList.add('text-red-600');
             }
         }
     </script>

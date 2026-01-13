@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto pb-16">
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-slate-200 pb-8">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Timeline Patched</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900">Fortification Dashboard</h1>
+        </div>
+        <div class="flex gap-3">
+            <div class="relative group">
+                <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2">
+                    <i data-lucide="history" class="w-4 h-4"></i> Versions
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl hidden group-hover:block z-50">
+                    {% for v in versions %}
+                    <a href="/set_version/{{ loop.index0 }}" class="block px-4 py-2 text-xs hover:bg-slate-50 border-b last:border-0">
+                        v{{ loop.index }} - {{ v.timestamp }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="/followup" class="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold flex items-center gap-2">
+                <i data-lucide="play" class="w-4 h-4"></i> Execute Plan
+            </a>
+        </div>
+    </header>
+
+    <!-- 2x2 Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <!-- Original -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 quadrant-card">
+            <div class="px-6 py-4 border-b bg-slate-50/50 font-bold text-slate-700 text-sm flex items-center gap-2 uppercase">
+                <i data-lucide="file-text" class="w-4 h-4"></i> Original Plan
+            </div>
+            <div class="p-6 overflow-y-auto text-sm text-slate-500 italic whitespace-pre-wrap">{{ user_input.plan }}</div>
+        </div>
+
+        <!-- Problems -->
+        <div class="bg-white rounded-2xl shadow-sm border border-red-100 quadrant-card">
+            <div class="px-6 py-4 border-b bg-red-50/30 font-bold text-red-700 text-sm flex items-center gap-2 uppercase">
+                <i data-lucide="alert-octagon" class="w-4 h-4"></i> Critical Weaknesses
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4">
+                {% for p in current.problems %}
+                <div class="p-4 bg-red-50/20 rounded-xl border border-red-50 flex justify-between gap-4">
+                    <div>
+                        <h4 class="font-bold text-red-900 text-sm">{{ p.title }}</h4>
+                        <p class="text-xs text-slate-600">{{ p.desc }}</p>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="setBinary('problem', {{ loop.index0 }}, true, this)" class="p-1.5 rounded-md transition-all {{ 'text-green-600 bg-white shadow-sm' if p.liked == True else 'text-slate-300' }}"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
+                        <button onclick="setBinary('problem', {{ loop.index0 }}, false, this)" class="p-1.5 rounded-md transition-all {{ 'text-red-600 bg-white shadow-sm' if p.liked == False else 'text-slate-300' }}"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Revised -->
+        <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 quadrant-card">
+            <div class="px-6 py-4 border-b bg-indigo-50/30 font-bold text-indigo-700 text-sm flex items-center gap-2 uppercase">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Revised Strategy
+            </div>
+            <div class="p-6 overflow-y-auto text-sm text-slate-800 leading-relaxed">{{ current.revised_plan }}</div>
+        </div>
+
+        <!-- Improvements -->
+        <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 quadrant-card">
+            <div class="px-6 py-4 border-b bg-emerald-50/30 font-bold text-emerald-700 text-sm flex items-center gap-2 uppercase">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> Improvements
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4">
+                {% for i in current.improvements %}
+                <div class="p-4 bg-emerald-50/20 rounded-xl border border-emerald-50 flex justify-between gap-4">
+                    <div>
+                        <h4 class="font-bold text-emerald-900 text-sm">{{ i.title }}</h4>
+                        <p class="text-xs text-slate-600">{{ i.desc }}</p>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="setBinary('improvement', {{ loop.index0 }}, true, this)" class="p-1.5 rounded-md transition-all {{ 'text-green-600 bg-white shadow-sm' if i.liked == True else 'text-slate-300' }}"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
+                        <button onclick="setBinary('improvement', {{ loop.index0 }}, false, this)" class="p-1.5 rounded-md transition-all {{ 'text-red-600 bg-white shadow-sm' if i.liked == False else 'text-slate-300' }}"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback & History -->
+    <section class="bg-slate-900 rounded-3xl p-10 text-white flex flex-col md:flex-row gap-12 relative overflow-hidden">
+        <form action="/refine" method="POST" class="flex-1 relative z-10">
+            <h3 class="text-2xl font-bold mb-4">Refine the Timeline</h3>
+            <p class="text-slate-400 text-sm mb-6">Add constraints and regenerate the analysis.</p>
+            <textarea name="feedback" required class="w-full h-32 bg-white/10 border border-white/20 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 resize-none mb-4" placeholder="e.g. Find zero-cost marketing tactics instead..."></textarea>
+            <button type="submit" class="px-8 py-4 bg-indigo-600 rounded-xl font-bold hover:bg-indigo-500">Update Analysis</button>
+        </form>
+
+        <div class="w-full md:w-80 relative z-10">
+            <h4 class="font-bold text-slate-300 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Notes History</h4>
+            <div class="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scroll">
+                {% for v in versions|reverse %}
+                <div class="border-l-2 border-indigo-500 pl-4">
+                    <span class="text-[10px] text-slate-500 font-bold block mb-1 uppercase">{{ v.timestamp }}</span>
+                    <p class="text-xs text-slate-300 leading-relaxed">"{{ v.notes }}"</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    async function setBinary(type, idx, liked, btn) {
+        await fetch('/feedback_binary', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({type, idx, liked})
+        });
+        location.reload(); // Simple refresh to update UI state
+    }
+</script>
+{% endblock %}
