@@ -5,7 +5,6 @@ import json
 import config
 import prompts
 
-MODEL_NAME = "gemini-2.5-flash-preview-09-2025"
 
 
 def call_gemini_chat(system_prompt, user_prompt, history=None):
@@ -13,7 +12,7 @@ def call_gemini_chat(system_prompt, user_prompt, history=None):
     Simulates a chat interaction by sending the session history alongside the new prompt.
     """
     api_key = config.GEMINI_API_KEY
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{config.GEMINI_MODEL_NAME}:generateContent?key={api_key}"
 
     # Initialize contents with history if available
     contents = []
