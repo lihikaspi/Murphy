@@ -5,8 +5,12 @@ from google import genai
 from google.genai import types
 import config
 import prompts
+from pinecone import Pinecone
 
 client = genai.Client(api_key=config.GEMINI_API_KEY)
+
+pc = Pinecone(api_key=config.PINECONE_API_KEY)
+index = pc.Index(config.PINECONE_INDEX)
 
 
 def call_gemini_json(system_prompt, user_prompt, history=None):
@@ -62,8 +66,12 @@ def generate_initial_scenarios(data, history):
     """
     Step 1: Generates 10 problems and 3 scenario maze obstacles.
     """
+    username = data.get('username', '')
+    past_lessons = retrieve_user_history(username, data.get('plan', ''))
+
     system = prompts.SCENARIO_PROMPT_TEMPLATE.format(
-        pessimism=data.get('pessimism', 'Realistic')
+        pessimism=data.get('pessimism', 'Realistic'),
+        user_history=past_lessons
     )
 
     user_input = (
@@ -154,3 +162,87 @@ def generate_followup(revised_plan, user_info, history):
         "advice": result.get("advice", ""),
         "raw_response": json.dumps(result)
     }
+
+
+def get_embedding(text):
+    """
+    Retrieves the embedding for the given text using Gemini embeddings.
+    """
+    try:
+        result = client.models.embed_content(
+            model="models/text-embedding-004",
+            contents=text
+        )
+        # Handle potential API response structure differences
+        if hasattr(result, 'embeddings'):
+            return result.embeddings[0].values
+        return []
+    except Exception as e:
+        print(f"Embedding Error: {e}")
+        return []
+
+
+def retrieve_user_history(username, current_plan):
+    """
+    Searches only within the specific user's namespace for past lessons.
+    """
+    if not username:
+        return ""
+
+    vector = get_embedding(current_plan)
+    if not vector:
+        return ""
+
+    try:
+        results = index.query(
+            vector=vector,
+            top_k=3,
+            include_metadata=True,
+            namespace=f"user_{username}"
+        )
+
+        if not results['matches']:
+            return ""
+
+        # Format the past failures into a readable string for the LLM
+        history_text = "\n".join([
+            f"- In project '{match['metadata']['goal']}', you failed due to: {match['metadata']['failure_summary']}"
+            for match in results['matches']
+        ])
+        return history_text
+    except Exception as e:
+        print(f"Pinecone Query Error: {e}")
+        return ""
+
+
+def save_user_lesson(username, goal, plan, failure_summary):
+    """
+    Saves the 'Lesson Learned' into the user's private namespace.
+    """
+    if not username:
+        return
+
+    vector = get_embedding(plan)
+    if not vector:
+        return
+
+    # Create a unique ID for this memory
+    record_id = f"lesson_{int(time.time())}"
+
+    try:
+        index.upsert(
+            vectors=[
+                (
+                    record_id,
+                    vector,
+                    {
+                        "goal": goal,
+                        "failure_summary": failure_summary
+                    }
+                )
+            ],
+            namespace=f"user_{username}"
+        )
+        print(f"Lesson saved for {username}")
+    except Exception as e:
+        print(f"Pinecone Upsert Error: {e}")

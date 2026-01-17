@@ -24,6 +24,7 @@ def index():
 def process_input():
     session['chat_history'] = []  # Reset for new session
     session['user_input'] = {
+        'username': request.form.get('username'),
         'about': request.form.get('about'),
         'goal': request.form.get('goal'),
         'plan': request.form.get('plan'),
@@ -88,6 +89,18 @@ def finalize_timeline():
     session['versions'] = [version]
     session['current_v_idx'] = 0
     session.modified = True
+
+    if session.get('problems'):
+        # Extract the top 3 problems to summarize the failure of this plan
+        top_problems = [p['title'] for p in session['problems'][:3]]
+        failure_summary = f"Major risks identified: {', '.join(top_problems)}"
+
+        llm_logic.save_user_lesson(
+            username=session['user_input']['username'],
+            goal=session['user_input']['goal'],
+            plan=session['user_input']['plan'],
+            failure_summary=failure_summary
+        )
     return redirect(url_for('dashboard'))
 
 
