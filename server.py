@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from flask_session import Session
 from datetime import datetime
 import llm_logic
 import config
@@ -6,6 +7,10 @@ import config
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
+# Configure server-side session
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+Session(app) # Initialize the session extension
 
 def add_to_history(role, content):
     """Utility to manage the chat history within the Flask session."""
@@ -22,18 +27,19 @@ def index():
 
 @app.route('/process_input', methods=['POST'])
 def process_input():
+    username = request.form.get('username', '').strip()
     about = request.form.get('about', '').strip()
     goal = request.form.get('goal', '').strip()
     plan = request.form.get('plan', '').strip()
     wrong = request.form.get('wrong', '').strip()
-    pessimism = request.form.get('pessimism', 'Realistic') # Default to Realistic
+    pessimism = request.form.get('pessimism', 'Realistic')
 
-    # If any required field is empty after stripping whitespace, redirect back to index
-    if not all([about, goal, plan]):
+    if not all([username, about, goal, plan]):
         return redirect(url_for('index'))
 
-    session['chat_history'] = []  # Reset history for a new plan sequence
+    session['chat_history'] = []
     session['user_input'] = {
+        'username': username, # Store it here
         'about': about,
         'goal': goal,
         'plan': plan,
@@ -47,9 +53,8 @@ def process_input():
     if "error" in res:
         return f"Simulation Error: {res.get('raw')}"
 
-    # Record interaction for context
     add_to_history("user", f"Here is my plan for {session['user_input']['goal']}")
-    add_to_history("model", res['raw_response'])
+    add_to_history("model", f"Generated 10 failures and {len(res['scenarios'])} scenarios.")
 
     session['problems'] = res['problems']
     session['scenarios'] = res['scenarios']
@@ -92,13 +97,13 @@ def finalize_timeline():
     res = llm_logic.generate_dashboard(session['user_input'], session['maze_answers'], session['chat_history'])
 
     add_to_history("user", f"I chose these solutions for the maze: {session['maze_answers']}")
-    add_to_history("model", res['raw_response'])
+    add_to_history("model", res.get('revised_plan', 'Plan revised.'))
 
     version = {
         "timestamp": datetime.now().strftime("%I:%M %p"),
-        "problems": session['problems'],
-        "improvements": res['improvements'],
-        "revised_plan": res['revised_plan'],
+        "problems": session.get('problems', []),
+        "improvements": res.get('improvements', []),
+        "revised_plan": res.get('revised_plan', ''),
         "notes": "Initial analysis generated."
     }
     session['versions'] = [version]
@@ -116,6 +121,11 @@ def finalize_timeline():
             plan=session['user_input']['plan'],
             failure_summary=failure_summary
         )
+
+    session.pop('scenarios', None)  # Remove the heavy maze scenario objects
+    session.pop('problems', None)  # The 10 initial problems are now in 'versions'
+
+    session.modified = True
     return redirect(url_for('dashboard'))
 
 
@@ -171,13 +181,13 @@ def refine():
         session['user_input'],
         feedback,
         binary,
-        session['chat_history'],
-        base_plan_override=base_version['revised_plan']  # Pass selected version context
+        session['chat_history']
+        # base_plan_override=base_version['revised_plan']  # Pass selected version context
     )
 
     if res:
         add_to_history("user", f"Refining version {v_idx + 1}. Feedback: {feedback}")
-        add_to_history("model", res['raw_response'])
+        add_to_history("model", res.get('revised_plan', 'Plan updated.'))
 
         note_text = f"Refined: {feedback[:40]}..." if feedback else "binary feedback given"
 
@@ -227,7 +237,7 @@ def followup():
         res = llm_logic.generate_followup(current['revised_plan'], session['user_input']['about'],
                                           session['chat_history'])
         add_to_history("user", "Construct my execution plan.")
-        add_to_history("model", res['raw_response'])
+        add_to_history("model", "Execution plan and advice generated.")
         current['followup'] = res
         session.modified = True
 

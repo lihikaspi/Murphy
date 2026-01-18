@@ -33,37 +33,34 @@
         <div class="space-y-4">
             {% for option in scenario.options %}
             <label class="block cursor-pointer">
-                <input type="radio" name="choice" value="{{ option }}" class="peer sr-only" {% if loop.first %}checked{% endif %} onclick="document.getElementById('other-box').classList.add('hidden')">
+                {# Formats the dict into a string for the form submission to support existing parsing in plan.html #}
+                {% set opt_str = option.text ~ " [Stress: " ~ option.scores.stress ~ ", Deviation: " ~ option.scores.deviation ~ ", Feasibility: " ~ option.scores.feasibility ~ "]" %}
+
+                <input type="radio" name="choice" value="{{ opt_str }}" class="peer sr-only" {% if loop.first %}checked{% endif %} onclick="document.getElementById('other-box').classList.add('hidden')">
                 <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 transition-all">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="font-bold text-slate-800">{{ option.split('[')[0].strip() }}</span>
+                        {# Access the text key directly #}
+                        <span class="font-bold text-slate-800">{{ option.text }}</span>
                         <div class="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-indigo-600 flex items-center justify-center">
                             <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100"></div>
                         </div>
                     </div>
-                    {% if '[' in option %}
-                    <div class="flex gap-4">
-                        {% set scores = option.split('[')[1].replace(']', '').split(',') %}
-                        {% for s in scores %}
-                            {% set score_parts = s.strip().split(':') %}
-                            {% set label = score_parts[0].strip() %}
-                            {% set value = score_parts[1].strip() | int %}
 
-                            {# Severity Logic: Green (Better), Amber (Moderate), Red (Worse) #}
-                            {% if label == 'Feasibility' %}
-                                {# Higher is Better #}
+                    <div class="flex gap-4">
+                        {% for label, value in option.scores.items() %}
+                            {% set label_cap = label|capitalize %}
+                            {# Severity Logic #}
+                            {% if label_cap == 'Feasibility' %}
                                 {% set color_class = 'bg-emerald-100 text-emerald-700' if value >= 8 else 'bg-amber-100 text-amber-700' if value >= 4 else 'bg-rose-100 text-rose-700' %}
                             {% else %}
-                                {# Stress/Deviation: Lower is Better #}
                                 {% set color_class = 'bg-emerald-100 text-emerald-700' if value <= 3 else 'bg-amber-100 text-amber-700' if value <= 7 else 'bg-rose-100 text-rose-700' %}
                             {% endif %}
 
                             <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded {{ color_class }}">
-                                {{ s.strip() }}
+                                {{ label_cap }}: {{ value }}
                             </span>
                         {% endfor %}
                     </div>
-                    {% endif %}
                 </div>
             </label>
             {% endfor %}
