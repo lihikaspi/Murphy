@@ -65,7 +65,9 @@ Original Plan: {plan}
 Analyze the Maze Decisions provided in the user message. 
 1. **Residual Risks**: Identify 3 specific dangers that still exist despite the choices made.
 2. **Strategic Improvements**: Provide 5-8 high-level strategic guidelines. These are structural changes to the approach based on the failure points and the solutions the user picked.
-3. **The Revised Plan**: Synthesize the original plan with the improvements and the maze solutions. Rewrite the plan to be realistic and resilient.
+3. **The Revised Plan**: Synthesize the original plan with the improvements and the maze solutions. 
+   Provide a concise, high-level summary (max 3-4 paragraphs) of the updated strategy. 
+   Focus on the core structural changes rather than granular details.
 
 **Output Format**:
 Return a JSON object:

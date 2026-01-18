@@ -16,9 +16,6 @@
 
             <div class="flex gap-3">
                 <div class="relative group">
-                    <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2">
-                        <i data-lucide="history" class="w-4 h-4"></i> Versions
-                    </button>
                     <div class="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl hidden group-hover:block z-50">
                         {% for v in versions %}
                         <a href="/set_version/{{ loop.index0 }}" class="block px-4 py-2 text-xs hover:bg-slate-50 border-b last:border-0 {% if loop.index0 == session.get('current_v_idx') %}bg-slate-100 font-bold{% endif %}">
@@ -55,11 +52,13 @@
                         <h4 class="font-bold text-slate-900 text-sm mb-1">{{ p.title }}</h4>
                         <p class="text-xs text-slate-500">{{ p.desc }}</p>
                     </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="setBinary('problem', {{ loop.index0 }}, true)" class="p-1.5 rounded-md transition-all {% if p.liked == True %}bg-emerald-500 text-white shadow-md{% else %}text-slate-300 hover:text-emerald-500{% endif %}">
+                    <div class="flex gap-1 shrink-0 binary-controls" data-type="problem" data-idx="{{ loop.index0 }}">
+                        <button onclick="setBinary('problem', {{ loop.index0 }}, true, this)"
+                                class="like-btn p-1.5 rounded-md transition-all {% if p.liked == True %}bg-emerald-500 text-white shadow-md{% else %}text-slate-300 hover:text-emerald-500{% endif %}">
                             <i data-lucide="thumbs-up" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="setBinary('problem', {{ loop.index0 }}, false)" class="p-1.5 rounded-md transition-all {% if p.liked == False %}bg-rose-500 text-white shadow-md{% else %}text-slate-300 hover:text-rose-500{% endif %}">
+                        <button onclick="setBinary('problem', {{ loop.index0 }}, false, this)"
+                                class="dislike-btn p-1.5 rounded-md transition-all {% if p.liked == False %}bg-rose-500 text-white shadow-md{% else %}text-slate-300 hover:text-rose-500{% endif %}">
                             <i data-lucide="thumbs-down" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -88,11 +87,13 @@
                         <h4 class="font-bold text-slate-900 text-sm mb-1">{{ i.title }}</h4>
                         <p class="text-xs text-slate-500">{{ i.desc }}</p>
                     </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="setBinary('improvement', {{ loop.index0 }}, true)" class="p-1.5 rounded-md transition-all {% if i.liked == True %}bg-emerald-500 text-white shadow-md{% else %}text-slate-300 hover:text-emerald-500{% endif %}">
+                    <div class="flex gap-1 shrink-0 binary-controls" data-type="improvement" data-idx="{{ loop.index0 }}">
+                        <button onclick="setBinary('improvement', {{ loop.index0 }}, true, this)"
+                                class="like-btn p-1.5 rounded-md transition-all {% if p.liked == True %}bg-emerald-500 text-white shadow-md{% else %}text-slate-300 hover:text-emerald-500{% endif %}">
                             <i data-lucide="thumbs-up" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="setBinary('improvement', {{ loop.index0 }}, false)" class="p-1.5 rounded-md transition-all {% if i.liked == False %}bg-rose-500 text-white shadow-md{% else %}text-slate-300 hover:text-rose-500{% endif %}">
+                        <button onclick="setBinary('improvement', {{ loop.index0 }}, false, this)"
+                                class="dislike-btn p-1.5 rounded-md transition-all {% if p.liked == False %}bg-rose-500 text-white shadow-md{% else %}text-slate-300 hover:text-rose-500{% endif %}">
                             <i data-lucide="thumbs-down" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -111,8 +112,6 @@
                     <div class="absolute -top-3 left-4 px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded uppercase tracking-wider">
                         Obstacle {{ loop.index }}
                     </div>
-                    <h4 class="text-sm font-bold text-slate-900 mb-2 truncate">{{ choice.title }}</h4>
-                    <p class="text-xs text-slate-500 italic line-clamp-2 mb-3">"{{ choice.answer.split('[')[0].strip() }}"</p>
 
                     {% if '[' in choice.answer %}
                     <div class="flex flex-wrap gap-2">
@@ -219,13 +218,43 @@
     // Call on load to check existing binary feedback
     window.onload = validateFeedback;
 
-    async function setBinary(type, idx, liked) {
-        await fetch('/feedback_binary', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({type, idx, liked})
+    async function setBinary(type, idx, liked, btnElement) {
+        // 1. Immediately provide visual feedback
+        const container = btnElement.closest('.binary-controls');
+        const likeBtn = container.querySelector('.like-btn');
+        const dislikeBtn = container.querySelector('.dislike-btn');
+
+        // Reset both buttons to default state
+        [likeBtn, dislikeBtn].forEach(btn => {
+            btn.classList.remove('bg-emerald-500', 'bg-rose-500', 'text-white', 'shadow-md');
+            btn.classList.add('text-slate-300');
         });
-        location.reload();
+
+        // Apply active state to the clicked button
+        if (liked) {
+            btnElement.classList.remove('text-slate-300');
+            btnElement.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
+        } else {
+            btnElement.classList.remove('text-slate-300');
+            btnElement.classList.add('bg-rose-500', 'text-white', 'shadow-md');
+        }
+
+        // 2. Send data to server in the background
+        try {
+            const response = await fetch('/feedback_binary', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({type, idx, liked})
+            });
+
+            if (!response.ok) throw new Error('Failed to save feedback');
+
+            // Update the validateFeedback button state if necessary
+            validateFeedback();
+        } catch (err) {
+            console.error("Error updating feedback:", err);
+            // Optional: Revert UI if the server call fails
+        }
     }
 </script>
 {% endblock %}
