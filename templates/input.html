@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="fade-in max-w-3xl mx-auto py-10">
+<section class="max-w-3xl mx-auto py-10">
     <div class="mb-10 text-center md:text-left">
         <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">Stress-Test Your Strategy</h1>
         <p class="text-lg text-slate-500">The Time Traveler is waiting to report from your failed timeline.</p>
     </div>
 
     <form action="/process_input" method="POST" class="space-y-6 mb-10">
-        <!-- User Info -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
                 <i data-lucide="user" class="w-4 h-4 text-indigo-500 mr-2"></i> User Information <span class="text-red-500 ml-1">*</span>
@@ -16,31 +15,27 @@
             <textarea name="about" required class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Solo founder, limited budget, technical background...">{{ data.about }}</textarea>
         </div>
 
-        <!-- Purpose -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
                 <i data-lucide="target" class="w-4 h-4 text-emerald-500 mr-2"></i> The Goal / Purpose <span class="text-red-500 ml-1">*</span>
             </label>
-            <textarea name="goal" required class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-emerald-500" placeholder="e.g. Launch MVP and get first 10 paying customers...">{{ data.goal }}</textarea>
+            <textarea name="goal" required class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-emerald-500" placeholder="e.g. reach $2k in monthly recurring revenue...">{{ data.goal if data else '' }}</textarea>
         </div>
 
-        <!-- Plan -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
                 <i data-lucide="map" class="w-4 h-4 text-blue-500 mr-2"></i> The Current Plan <span class="text-red-500 ml-1">*</span>
             </label>
-            <textarea name="plan" required class="w-full h-40 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-blue-500" placeholder="Step 1: Build...&#10;Step 2: Launch...&#10;Step 3: Sell...">{{ data.plan }}</textarea>
+            <textarea name="plan" required class="w-full h-40 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-blue-500" placeholder="Step 1: Build...&#10;Step 2: Launch...">{{ data.plan if data else '' }}</textarea>
         </div>
 
-        <!-- Self Reflection -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <label class="flex items-center text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
                 <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500 mr-2"></i> Self-Reflection / Concerns
             </label>
-            <textarea name="wrong" class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-amber-500" placeholder="What do you think could go wrong? (Optional)">{{ data.wrong }}</textarea>
+            <textarea name="wrong" class="w-full h-24 p-3 bg-slate-50 border-0 rounded-xl text-slate-700 resize-none text-sm leading-relaxed focus:ring-2 focus:ring-amber-500" placeholder="What do you think could go wrong? (Optional)">{{ data.wrong if data else '' }}</textarea>
         </div>
 
-        <!-- Footer Control Bar -->
         <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-8 sticky bottom-6 z-30">
             <div class="w-full md:w-2/3">
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Murphy's Law Severity</label>
@@ -48,7 +43,7 @@
                     <select name="pessimism" class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none cursor-pointer transition-all">
                         <option value="Optimistic" {% if data.pessimism == 'Optimistic' %}selected{% endif %}>Optimistic (Minor Hiccups)</option>
                         <option value="Slightly Concerned" {% if data.pessimism == 'Slightly Concerned' %}selected{% endif %}>Slightly Concerned</option>
-                        <option value="Realistic" {% if data.pessimism == 'Realistic' or not data.pessimism %}selected{% endif %}>Realistic (Standard Failure)</option>
+                        <option value="Realistic" {% if not data or not data.pessimism or data.pessimism == 'Realistic' %}selected{% endif %}>Realistic (Standard Failure)</option>
                         <option value="Pessimistic" {% if data.pessimism == 'Pessimistic' %}selected{% endif %}>Pessimistic (Critical Obstacles)</option>
                         <option value="Total Chaos" {% if data.pessimism == 'Total Chaos' %}selected{% endif %}>Total Chaos (Black Swan)</option>
                     </select>

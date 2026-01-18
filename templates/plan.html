@@ -6,35 +6,35 @@
         <div>
             <div class="flex items-center gap-2 mb-2">
                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Analysis Active</span>
-                <span class="text-slate-400 text-xs font-medium">Severity: {{ user_input.pessimism }}</span>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900">Strategic Fortification Dashboard</h1>
         </div>
-        <div class="flex gap-3">
-            <div class="relative group">
-                <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2">
-                    <i data-lucide="history" class="w-4 h-4"></i> Versions
-                </button>
-                <div class="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl hidden group-hover:block z-50">
-                    {% for v in versions %}
-                    <a href="/set_version/{{ loop.index0 }}" class="block px-4 py-2 text-xs hover:bg-slate-50 border-b last:border-0 {% if loop.index0 == session.get('current_v_idx') %}bg-slate-100 font-bold{% endif %}">
-                        v{{ loop.index }} - {{ v.timestamp }}
-                    </a>
-                    {% endfor %}
+        <div class="flex items-center gap-6">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Current Severity: {{ user_input.pessimism }}
+            </span>
+
+            <div class="flex gap-3">
+                <div class="relative group">
+                    <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i> Versions
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl hidden group-hover:block z-50">
+                        {% for v in versions %}
+                        <a href="/set_version/{{ loop.index0 }}" class="block px-4 py-2 text-xs hover:bg-slate-50 border-b last:border-0 {% if loop.index0 == session.get('current_v_idx') %}bg-slate-100 font-bold{% endif %}">
+                            v{{ loop.index }} - {{ v.timestamp }}
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
+                <a href="/followup" class="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                    Finish <i data-lucide="check-circle" class="w-4 h-4"></i>
+                </a>
             </div>
-            <a href="/followup" class="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-colors">
-                <i data-lucide="play" class="w-4 h-4"></i> Execute Plan
-            </a>
-            <a href="/" class="p-2 bg-white border border-slate-200 text-slate-500 rounded-lg hover:text-slate-900" title="Edit Info">
-                <i data-lucide="edit-3" class="w-5 h-5"></i>
-            </a>
         </div>
     </header>
 
-    <!-- 2x2 Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-        <!-- Original Plan -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-[26rem] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b bg-slate-50/50 font-bold text-slate-700 text-xs flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="file-text" class="w-4 h-4"></i> Original Plan
@@ -44,28 +44,30 @@
             </div>
         </div>
 
-        <!-- Problems -->
         <div class="bg-white rounded-2xl shadow-sm border border-red-100 h-[26rem] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b bg-red-50/30 font-bold text-red-700 text-xs flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="alert-octagon" class="w-4 h-4"></i> Identified Weaknesses
             </div>
-            <div class="p-6 overflow-y-auto space-y-4">
+            <div class="p-6 overflow-y-auto space-y-3">
                 {% for p in current.problems %}
-                <div class="p-4 bg-red-50/20 rounded-xl border border-red-50 flex justify-between gap-4">
+                <div class="p-4 bg-white rounded-xl border border-slate-100 flex justify-between items-start gap-4 hover:border-red-200 transition-colors">
                     <div class="flex-1">
-                        <h4 class="font-bold text-red-900 text-sm mb-1">{{ p.title }}</h4>
-                        <p class="text-xs text-slate-600">{{ p.desc }}</p>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">{{ p.title }}</h4>
+                        <p class="text-xs text-slate-500">{{ p.desc }}</p>
                     </div>
-                    <div class="flex gap-2 shrink-0">
-                        <button onclick="setBinary('problem', {{ loop.index0 }}, true)" class="p-1.5 rounded-md transition-all {% if p.liked == True %}bg-white shadow-sm text-green-600{% else %}text-slate-300 hover:text-green-600{% endif %}"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
-                        <button onclick="setBinary('problem', {{ loop.index0 }}, false)" class="p-1.5 rounded-md transition-all {% if p.liked == False %}bg-white shadow-sm text-red-600{% else %}text-slate-300 hover:text-red-600{% endif %}"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="setBinary('problem', {{ loop.index0 }}, true)" class="p-1.5 rounded-md transition-all {% if p.liked == True %}bg-emerald-500 text-white shadow-md{% else %}text-slate-300 hover:text-emerald-500{% endif %}">
+                            <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="setBinary('problem', {{ loop.index0 }}, false)" class="p-1.5 rounded-md transition-all {% if p.liked == False %}bg-rose-500 text-white shadow-md{% else %}text-slate-300 hover:text-rose-500{% endif %}">
+                            <i data-lucide="thumbs-down" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Revised Plan -->
         <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 h-[26rem] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b bg-indigo-50/30 font-bold text-indigo-700 text-xs flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="shield-check" class="w-4 h-4"></i> Revised Strategy
@@ -75,21 +77,24 @@
             </div>
         </div>
 
-        <!-- Improvements -->
         <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 h-[26rem] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b bg-emerald-50/30 font-bold text-emerald-700 text-xs flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Strategic Improvements
             </div>
-            <div class="p-6 overflow-y-auto space-y-4">
+            <div class="p-6 overflow-y-auto space-y-3">
                 {% for i in current.improvements %}
-                <div class="p-4 bg-emerald-50/20 rounded-xl border border-emerald-50 flex justify-between gap-4">
+                <div class="p-4 bg-white rounded-xl border border-slate-100 flex justify-between items-start gap-4 hover:border-emerald-200 transition-colors">
                     <div class="flex-1">
-                        <h4 class="font-bold text-emerald-900 text-sm mb-1">{{ i.title }}</h4>
-                        <p class="text-xs text-slate-600">{{ i.desc }}</p>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">{{ i.title }}</h4>
+                        <p class="text-xs text-slate-500">{{ i.desc }}</p>
                     </div>
-                    <div class="flex gap-2 shrink-0">
-                        <button onclick="setBinary('improvement', {{ loop.index0 }}, true)" class="p-1.5 rounded-md transition-all {% if i.liked == True %}bg-white shadow-sm text-green-600{% else %}text-slate-300 hover:text-green-600{% endif %}"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
-                        <button onclick="setBinary('improvement', {{ loop.index0 }}, false)" class="p-1.5 rounded-md transition-all {% if i.liked == False %}bg-white shadow-sm text-red-600{% else %}text-slate-300 hover:text-red-600{% endif %}"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="setBinary('improvement', {{ loop.index0 }}, true)" class="p-1.5 rounded-md transition-all {% if i.liked == True %}bg-emerald-500 text-white shadow-md{% else %}text-slate-300 hover:text-emerald-500{% endif %}">
+                            <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="setBinary('improvement', {{ loop.index0 }}, false)" class="p-1.5 rounded-md transition-all {% if i.liked == False %}bg-rose-500 text-white shadow-md{% else %}text-slate-300 hover:text-rose-500{% endif %}">
+                            <i data-lucide="thumbs-down" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
@@ -97,38 +102,96 @@
         </div>
     </div>
 
-    <!-- Maze Summary -->
-    <section class="mb-12">
-        <h2 class="text-xl font-bold text-slate-900 mb-6 px-2">Maze Decisions Summary</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <section class="mb-16">
+        <h2 class="text-xl font-bold text-slate-900 mb-8 px-2">Timeline Summary</h2>
+        <div class="flex items-center gap-0 overflow-x-auto pb-6 scroll-hide">
             {% for choice in maze_choices %}
-            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Decision {{ loop.index }}</span>
-                <p class="text-sm text-indigo-700 font-bold mt-2">{{ choice }}</p>
+            <div class="flex items-center min-w-[300px] flex-shrink-0">
+                <div class="relative bg-white rounded-xl border border-slate-200 p-5 shadow-sm w-full">
+                    <div class="absolute -top-3 left-4 px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded uppercase tracking-wider">
+                        Obstacle {{ loop.index }}
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900 mb-2 truncate">{{ choice.title }}</h4>
+                    <p class="text-xs text-slate-500 italic line-clamp-2 mb-3">"{{ choice.answer.split('[')[0].strip() }}"</p>
+
+                    {% if '[' in choice.answer %}
+                    <div class="flex flex-wrap gap-2">
+                        {% set scores = choice.answer.split('[')[1].split(']')[0].split(',') %}
+                        {% for s in scores %}
+                            {% set score_parts = s.split(':') %}
+                            {% set label = score_parts[0].strip() %}
+                            {% set val = score_parts[1].strip() | int %}
+
+                            {% if label == 'Feasibility' %}
+                                {% set color = 'text-emerald-600' if val >= 8 else 'text-amber-600' if val >= 4 else 'text-rose-600' %}
+                            {% else %}
+                                {% set color = 'text-emerald-600' if val <= 3 else 'text-amber-600' if val <= 7 else 'text-rose-600' %}
+                            {% endif %}
+                            <span class="text-[9px] font-black uppercase {{ color }}">{{ label }}: {{ val }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% if not loop.last %}
+                <div class="w-12 h-0.5 bg-slate-200 flex-shrink-0"></div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
     </section>
 
-    <!-- Feedback & History -->
-    <section class="bg-slate-900 rounded-3xl p-10 text-white flex flex-col md:flex-row gap-12 relative overflow-hidden">
+    <section class="bg-slate-900 rounded-3xl p-10 text-white flex flex-col lg:flex-row gap-12 relative overflow-hidden">
         <i data-lucide="message-square" class="absolute -top-10 -right-10 w-48 h-48 text-white/5"></i>
 
-        <form action="/refine" method="POST" class="flex-1 relative z-10">
-            <h3 class="text-2xl font-bold mb-4">Refine the Timeline</h3>
-            <p class="text-slate-400 text-sm mb-6">Add new constraints or preferences to regenerate the analysis.</p>
-            <textarea name="feedback" required class="w-full h-32 bg-white/10 border border-white/20 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4" placeholder="e.g. Find cheaper alternatives for the marketing stack..."></textarea>
-            <button type="submit" class="px-8 py-4 bg-indigo-600 rounded-xl font-bold hover:bg-indigo-500 transition-all">Update Analysis</button>
-        </form>
+        <div class="flex-1 relative z-10">
+            <form id="refineForm" action="/refine" method="POST">
+                <h3 class="text-2xl font-bold mb-4">Refine the Timeline</h3>
+                <p class="text-slate-400 text-sm mb-6">Currently refining <b>Version {{ session.current_v_idx + 1 }}</b>. Changes will create a new version.</p>
 
-        <div class="w-full md:w-80 relative z-10">
-            <h4 class="font-bold text-slate-300 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Notes History</h4>
-            <div class="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scroll">
-                {% for v in versions|reverse %}
-                <div class="border-l-2 border-indigo-500 pl-4">
-                    <span class="text-[10px] text-slate-500 font-bold block mb-1 uppercase">{{ v.timestamp }}</span>
-                    <p class="text-xs text-slate-300 leading-relaxed">"{{ v.notes }}"</p>
+                <textarea id="feedbackText" name="feedback" oninput="validateFeedback()" class="w-full h-32 bg-white/10 border border-white/20 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4" placeholder="e.g. Focus more on organic growth..."></textarea>
+
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <button id="sendBtn" type="submit" disabled class="px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                        Update Analysis
+                    </button>
+
+                    <div class="flex-1">
+                        <select name="pessimism" class="bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none w-full md:w-64 cursor-pointer">
+                            {% for level in ["Optimistic", "Slightly Concerned", "Realistic", "Pessimistic", "Total Chaos"] %}
+                            <option value="{{ level }}" class="text-slate-900" {% if user_input.pessimism == level %}selected{% endif %}>{{ level }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
+            </form>
+        </div>
+
+        <div class="w-full lg:w-96 relative z-10 lg:border-l lg:border-white/10 lg:pl-12">
+            <h4 class="font-bold text-slate-300 mb-6 flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4"></i> Notes History
+            </h4>
+            <div class="space-y-4 max-h-[350px] overflow-y-auto pr-4 custom-scroll">
+                {% for v in versions|reverse %}
+                {% set actual_idx = versions|length - 1 - loop.index0 %}
+                <a href="/set_version/{{ actual_idx }}"
+                   class="block p-4 rounded-xl border-l-4 transition-all hover:bg-white/5 group
+                   {{ 'border-indigo-500 bg-white/10' if actual_idx == session.current_v_idx else 'border-transparent bg-white/5 opacity-60' }}">
+
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-widest {{ 'text-indigo-400' if actual_idx == session.current_v_idx else 'text-slate-500' }}">
+                            v{{ actual_idx + 1 }}
+                        </span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">{{ v.timestamp }}</span>
+                    </div>
+
+                    <p class="text-xs {{ 'text-white font-medium' if actual_idx == session.current_v_idx else 'text-slate-400' }} leading-relaxed italic line-clamp-2">
+                        "{{ v.notes }}"
+                    </p>
+
+                    {% if actual_idx == session.current_v_idx %}
+                    <span class="inline-block mt-2 text-[9px] font-bold text-indigo-400 uppercase tracking-tighter">Currently Viewing</span>
+                    {% endif %}
+                </a>
                 {% endfor %}
             </div>
         </div>
@@ -136,6 +199,26 @@
 </div>
 
 <script>
+    // Requirement 7: Validate if send button should be enabled
+    function validateFeedback() {
+        const text = document.getElementById('feedbackText').value.trim();
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Binary feedback check: any item has liked property as true/false
+        const currentProblems = {{ current.problems | tojson }};
+        const currentImps = {{ current.improvements | tojson }};
+        const hasBinary = currentProblems.some(p => p.liked !== null) || currentImps.some(i => i.liked !== null);
+
+        if (text.length > 0 || hasBinary) {
+            sendBtn.disabled = false;
+        } else {
+            sendBtn.disabled = true;
+        }
+    }
+
+    // Call on load to check existing binary feedback
+    window.onload = validateFeedback;
+
     async function setBinary(type, idx, liked) {
         await fetch('/feedback_binary', {
             method: 'POST',

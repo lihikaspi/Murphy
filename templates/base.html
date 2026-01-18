@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murphy - Strategic Pre-mortem</title>
+    <title>Murphy</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
 
         /* Smooth Fade In */
-        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Custom Scrollbar for Textareas */
@@ -38,28 +38,42 @@
     <aside class="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col fixed inset-y-0 z-50">
         <div class="p-8 pb-4">
             <div class="flex items-center gap-3 text-slate-900 mb-8">
-            <img src="../images/broken_clock.png" class="w-10 h-10 object-contain" alt="Logo">
-            <span class="text-2xl font-bold tracking-tight">Murphy</span>
-        </div>
+                <img src="../images/broken_clock.png" class="w-10 h-10 object-contain" alt="Logo">
+                <span class="text-2xl font-bold tracking-tight">Murphy</span>
+            </div>
+
+            {% if session.get('user_input', {}).get('goal') %}
+            <div class="mb-8 px-3">
+                <p class="text-[13px] font-bold text-slate-400 uppercase tracking-widest mb-1">Current Goal</p>
+                <p class="text-[14px] text-slate-500 leading-relaxed">
+                    "{{ session['user_input']['goal'] }}"
+                </p>
+            </div>
+            {% endif %}
 
             <nav class="space-y-1">
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-3">Current Session</div>
+                <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Initial Plan
+                </a>
 
-            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
-                <i data-lucide="pen-tool" class="w-4 h-4"></i> Initial Plan
-            </a>
+                {% set has_versions = session.get('versions') %}
+                <a href="/dashboard"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                   {% if not has_versions %} pointer-events-none opacity-40 {% endif %}
+                   {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Revised Strategy
+                </a>
 
-            {% if session.get('versions') %}
-            <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
-                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Revised Strategy
-            </a>
-
-            <a href="/followup" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ 'bg-slate-50 text-slate-900' if request.path == '/followup' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
-                <i data-lucide="play-circle" class="w-4 h-4"></i> Followup
-            </a>
-            {% endif %}
-        </nav>
-    </div>
+                {% set current_v_idx = session.get('current_v_idx', 0) %}
+                {% set has_followup = has_versions and session['versions'][current_v_idx].get('followup') %}
+                <a href="/followup"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                   {% if not has_followup %} pointer-events-none opacity-40 {% endif %}
+                   {{ 'bg-slate-50 text-slate-900' if request.path == '/followup' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="play-circle" class="w-4 h-4"></i> Followup
+                </a>
+            </nav>
+        </div>
 
         <div class="mt-auto p-6 border-t border-slate-100">
             <a href="/reset" class="flex items-center justify-center gap-2 w-full px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
@@ -69,18 +83,8 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 md:ml-72 min-h-screen bg-[#F8FAFC] fade-in">
-        <!-- Mobile Header -->
-        <div class="md:hidden bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold">M</div>
-                <span class="font-bold text-lg">Murphy</span>
-            </div>
-            <a href="/reset" class="p-2 text-slate-500 hover:bg-slate-50 rounded-md"><i data-lucide="refresh-ccw" class="w-5 h-5"></i></a>
-        </div>
-
-        <div class="p-6 md:p-12 max-w-7xl mx-auto">
-            {% block content %}{% endblock %}
+    <main class="flex-1 md:ml-72 min-h-screen bg-[#F8FAFC]">
+        <div class="p-6 md:p-12 max-w-7xl mx-auto fade-in"> {% block content %}{% endblock %}
         </div>
     </main>
 

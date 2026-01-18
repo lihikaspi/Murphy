@@ -3,16 +3,23 @@
 <div class="max-w-3xl mx-auto pt-8">
     <div class="flex items-center justify-between mb-6">
         <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Scenario Maze</span>
-        <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">Obstacle {{ index }} / {{ total }}</span>
+
+        <div class="flex items-center gap-6">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Pessimism Level: {{ session.get('user_input', {}).get('pessimism', 'Realistic') }}
+            </span>
+            <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
+                Obstacle {{ index }} / {{ total }}
+            </span>
+        </div>
     </div>
 
-    <!-- Scenario Card -->
     <div class="bg-white rounded-3xl shadow-xl shadow-red-100/50 border border-red-100 overflow-hidden mb-10">
         <div class="bg-red-50/50 px-8 py-6 border-b border-red-100 flex items-center gap-4">
             <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="siren" class="w-8 h-8"></i></div>
             <div>
                 <h2 class="text-lg font-bold text-red-900">{{ scenario.title }}</h2>
-                <p class="text-sm text-red-700 font-medium italic">Communication from Failed Timeline</p>
+                <p class="text-[10px] text-red-700 font-bold uppercase tracking-tight">Timeline Failure Warning</p>
             </div>
         </div>
         <div class="p-8 md:p-10">
@@ -38,7 +45,22 @@
                     <div class="flex gap-4">
                         {% set scores = option.split('[')[1].replace(']', '').split(',') %}
                         {% for s in scores %}
-                        <span class="text-[10px] font-bold uppercase tracking-widest bg-slate-100 px-2 py-1 rounded text-slate-500">{{ s.strip() }}</span>
+                            {% set score_parts = s.strip().split(':') %}
+                            {% set label = score_parts[0].strip() %}
+                            {% set value = score_parts[1].strip() | int %}
+
+                            {# Severity Logic: Green (Better), Amber (Moderate), Red (Worse) #}
+                            {% if label == 'Feasibility' %}
+                                {# Higher is Better #}
+                                {% set color_class = 'bg-emerald-100 text-emerald-700' if value >= 8 else 'bg-amber-100 text-amber-700' if value >= 4 else 'bg-rose-100 text-rose-700' %}
+                            {% else %}
+                                {# Stress/Deviation: Lower is Better #}
+                                {% set color_class = 'bg-emerald-100 text-emerald-700' if value <= 3 else 'bg-amber-100 text-amber-700' if value <= 7 else 'bg-rose-100 text-rose-700' %}
+                            {% endif %}
+
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded {{ color_class }}">
+                                {{ s.strip() }}
+                            </span>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -59,7 +81,7 @@
         </div>
 
         <div class="mt-10 flex justify-end">
-            <button type="submit" class="px-10 py-5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 flex items-center gap-3">
+            <button type="submit" class="px-10 py-5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 flex items-center gap-3 transition-all active:scale-95">
                 {{ 'Seal Timeline' if index == total else 'Next Obstacle' }} <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </button>
         </div>
