@@ -3,17 +3,23 @@ from flask_session import Session
 from datetime import datetime
 import llm_logic
 import config
+import db_logic
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
-# Configure server-side session
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
-Session(app) # Initialize the session extension
+Session(app)
+
+
+@app.context_processor
+def inject_users():
+    """Injects the user list into all templates for the sidebar."""
+    return dict(all_users=db_logic.get_all_users())
+
 
 def add_to_history(role, content):
-    """Utility to manage the chat history within the Flask session."""
     if 'chat_history' not in session:
         session['chat_history'] = []
     session['chat_history'].append({"role": role, "content": content})
@@ -23,6 +29,31 @@ def add_to_history(role, content):
 @app.route('/')
 def index():
     return render_template('input.html', data=session.get('user_input', {}))
+
+
+@app.route('/add_user', methods=['POST'])
+def add_new_user():
+    """Handles adding a new user via the sidebar popup."""
+    username = request.form.get('username')
+    about = request.form.get('about')
+    if username and about:
+        new_user = db_logic.add_user(username, about)
+        return redirect(url_for('switch_user', user_id=new_user['id']))
+    return redirect(url_for('index'))
+
+
+@app.route('/switch_user/<int:user_id>')
+def switch_user(user_id):
+    """Clears the session and starts a blank state for the selected user."""
+    session.clear()
+    user_data = db_logic.supabase.table("users").select("*").eq("id", user_id).single().execute()
+    if user_data.data:
+        session['db_user_id'] = user_data.data['id']
+        session['user_input'] = {
+            'username': user_data.data['username'],
+            'about': user_data.data['about']
+        }
+    return redirect(url_for('index'))
 
 
 @app.route('/process_input', methods=['POST'])
@@ -37,9 +68,13 @@ def process_input():
     if not all([username, about, goal, plan]):
         return redirect(url_for('index'))
 
+    # Sync user background to DB
+    db_user_id = db_logic.sync_user(username, about)
+    session['db_user_id'] = db_user_id
+
     session['chat_history'] = []
     session['user_input'] = {
-        'username': username, # Store it here
+        'username': username,
         'about': about,
         'goal': goal,
         'plan': plan,
@@ -47,9 +82,7 @@ def process_input():
         'pessimism': pessimism
     }
 
-    # Proceed with scenario generation
     res = llm_logic.generate_initial_scenarios(session['user_input'], session['chat_history'])
-
     if "error" in res:
         return f"Simulation Error: {res.get('raw')}"
 
@@ -60,7 +93,7 @@ def process_input():
     session['scenarios'] = res['scenarios']
     session['maze_idx'] = 0
     session['maze_answers'] = []
-    session['versions'] = [] # Lock "Revised Strategy" until maze is finished
+    session['versions'] = []
 
     return redirect(url_for('maze'))
 
@@ -80,12 +113,10 @@ def process_maze():
     if ans == "Other":
         ans = request.form.get('other_text')
 
-    # Capture the title of the scenario the user just answered
     idx = session.get('maze_idx', 0)
     scenarios = session.get('scenarios', [])
     title = scenarios[idx]['title'] if idx < len(scenarios) else "Obstacle"
 
-    # Store as a dict to show in timeline later
     session['maze_answers'].append({'title': title, 'answer': ans})
     session['maze_idx'] += 1
     session.modified = True
@@ -95,7 +126,6 @@ def process_maze():
 @app.route('/finalize_timeline')
 def finalize_timeline():
     res = llm_logic.generate_dashboard(session['user_input'], session['maze_answers'], session['chat_history'])
-
     add_to_history("user", f"I chose these solutions for the maze: {session['maze_answers']}")
     add_to_history("model", res.get('revised_plan', 'Plan revised.'))
 
@@ -108,52 +138,30 @@ def finalize_timeline():
     }
     session['versions'] = [version]
     session['current_v_idx'] = 0
-    session.modified = True
 
-    if session.get('problems'):
-        # Extract the top 3 problems to summarize the failure of this plan
-        top_problems = [p['title'] for p in session['problems'][:3]]
-        failure_summary = f"Major risks identified: {', '.join(top_problems)}"
+    # Save initial plan to Database
+    plan_id = db_logic.create_plan_entry(
+        user_id=session['db_user_id'],
+        user_input=session['user_input'],
+        maze_results=session['maze_answers'],
+        versions=session['versions'],
+        chat_history=session['chat_history']
+    )
+    session['plan_db_id'] = plan_id
 
-        llm_logic.save_user_lesson(
-            username=session['user_input']['username'],
-            goal=session['user_input']['goal'],
-            plan=session['user_input']['plan'],
-            failure_summary=failure_summary
-        )
-
-    session.pop('scenarios', None)  # Remove the heavy maze scenario objects
-    session.pop('problems', None)  # The 10 initial problems are now in 'versions'
-
+    session.pop('scenarios', None)
+    session.pop('problems', None)
     session.modified = True
     return redirect(url_for('dashboard'))
-
-
-@app.route('/dashboard')
-def dashboard():
-    if not session.get('versions'):
-        return redirect(url_for('index'))
-
-    v_idx = session.get('current_v_idx', 0)
-    return render_template('plan.html',
-                           current=session['versions'][v_idx],
-                           versions=session['versions'],
-                           user_input=session['user_input'],
-                           maze_choices=session['maze_answers'])
 
 
 @app.route('/refine', methods=['POST'])
 def refine():
     feedback = request.form.get('feedback', '').strip()
-
-    # Requirement 1 & 2: Update session pessimism immediately
-    # This ensures the top label and the AI context are updated
     new_pessimism = request.form.get('pessimism')
     if new_pessimism:
         session['user_input']['pessimism'] = new_pessimism
-        session.modified = True
 
-    # Requirement 3: Get the data from the CURRENTLY SELECTED version
     v_idx = session.get('current_v_idx', 0)
     # Ensure index is valid
     if v_idx >= len(session['versions']):
@@ -175,42 +183,29 @@ def refine():
         "disliked_improvements": [i['desc'] for i in base_version['improvements'] if i.get('disliked')]
     }
 
-    # Pass the revised plan from the SELECTED version as the starting point
-    # We modify the prompt call slightly to use base_version['revised_plan']
-    res = llm_logic.refine_analysis(
-        session['user_input'],
-        feedback,
-        binary,
-        session['chat_history']
-        # base_plan_override=base_version['revised_plan']  # Pass selected version context
-    )
+    res = llm_logic.refine_analysis(session['user_input'], feedback, binary, session['chat_history'])
 
     if res:
         add_to_history("user", f"Refining version {v_idx + 1}. Feedback: {feedback}")
         add_to_history("model", res.get('revised_plan', 'Plan updated.'))
-
-        note_text = f"{feedback[:50]}..." if feedback else "binary feedback given"
 
         new_version = {
             "timestamp": datetime.now().strftime("%I:%M %p"),
             "problems": res['problems'],
             "improvements": res['improvements'],
             "revised_plan": res['revised_plan'],
-            "notes": note_text
+            "notes": f"{feedback[:50]}..." if feedback else "binary feedback given"
         }
-
-        # Append as a new version
         session['versions'].append(new_version)
-        # Set the new version as the active one
         session['current_v_idx'] = len(session['versions']) - 1
-        session.modified = True
 
-    return redirect(url_for('dashboard'))
-
-
-@app.route('/set_version/<int:idx>')
-def set_version(idx):
-    session['current_v_idx'] = idx
+        # Sync update to DB
+        db_logic.update_existing_plan(
+            plan_id=session['plan_db_id'],
+            versions=session['versions'],
+            chat_history=session['chat_history'],
+            pessimism=session['user_input']['pessimism']
+        )
     return redirect(url_for('dashboard'))
 
 
@@ -221,8 +216,14 @@ def feedback_binary():
     cat = 'problems' if data['type'] == 'problem' else 'improvements'
     session['versions'][v_idx][cat][data['idx']]['liked'] = data['liked']
     session.modified = True
-    return {"status": "ok"}
 
+    # Sync binary feedback to DB
+    db_logic.update_existing_plan(
+        plan_id=session['plan_db_id'],
+        versions=session['versions'],
+        chat_history=session['chat_history']
+    )
+    return {"status": "ok"}
 
 @app.route('/followup')
 def followup():
