@@ -14,9 +14,12 @@ Session(app)
 
 
 @app.context_processor
-def inject_users():
-    """Injects the user list into all templates for the sidebar."""
-    return dict(all_users=db_logic.get_all_users())
+def inject_global_vars():
+    """Injects global variables into all templates."""
+    return dict(
+        all_users=db_logic.get_all_users(),
+        has_versions=len(session.get('versions', [])) > 0
+    )
 
 
 def add_to_history(role, content):
@@ -157,6 +160,18 @@ def finalize_timeline():
     session.modified = True
     return redirect(url_for('dashboard'))
 
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('versions'):
+        return redirect(url_for('index'))
+
+    v_idx = session.get('current_v_idx', 0)
+    return render_template('plan.html',
+                           current=session['versions'][v_idx],
+                           versions=session['versions'],
+                           user_input=session['user_input'],
+                           maze_choices=session['maze_answers'])
+
 
 @app.route('/refine', methods=['POST'])
 def refine():
@@ -209,6 +224,11 @@ def refine():
             chat_history=session['chat_history'],
             pessimism=session['user_input']['pessimism']
         )
+    return redirect(url_for('dashboard'))
+
+@app.route('/set_version/<int:idx>')
+def set_version(idx):
+    session['current_v_idx'] = idx
     return redirect(url_for('dashboard'))
 
 
