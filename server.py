@@ -169,10 +169,10 @@ def refine():
         return redirect(url_for('dashboard'))
 
     binary = {
-        "liked_probs": [p['title'] for p in base_version['problems'] if p.get('liked')],
-        "liked_imps": [i['title'] for i in base_version['improvements'] if i.get('liked')],
-        "disliked_probs": [p['title'] for p in base_version['problems'] if p.get('disliked')],
-        "disliked_imps": [i['title'] for i in base_version['improvements'] if i.get('disliked')]
+        "liked_problems": [p['desc'] for p in base_version['problems'] if p.get('liked')],
+        "disliked_problems": [p['desc'] for p in base_version['problems'] if p.get('disliked')],
+        "liked_improvements": [i['desc'] for i in base_version['improvements'] if i.get('liked')],
+        "disliked_improvements": [i['desc'] for i in base_version['improvements'] if i.get('disliked')]
     }
 
     # Pass the revised plan from the SELECTED version as the starting point
@@ -189,7 +189,7 @@ def refine():
         add_to_history("user", f"Refining version {v_idx + 1}. Feedback: {feedback}")
         add_to_history("model", res.get('revised_plan', 'Plan updated.'))
 
-        note_text = f"Refined: {feedback[:40]}..." if feedback else "binary feedback given"
+        note_text = f"{feedback[:50]}..." if feedback else "binary feedback given"
 
         new_version = {
             "timestamp": datetime.now().strftime("%I:%M %p"),

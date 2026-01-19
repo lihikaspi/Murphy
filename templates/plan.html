@@ -5,7 +5,12 @@
     <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-slate-200 pb-8">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Analysis Active</span>
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    Analysis Active
+                </span>
+                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    Version {{ session.get('current_v_idx', 0) + 1 }}
+                </span>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900">Strategic Fortification Dashboard</h1>
         </div>
@@ -200,13 +205,13 @@
 
                     <div class="flex justify-between items-start mb-2">
                         <span class="text-[10px] font-black uppercase tracking-widest {{ 'text-indigo-400' if actual_idx == session.current_v_idx else 'text-slate-500' }}">
-                            v{{ actual_idx + 1 }}
+                            version {{ actual_idx + 1 }}
                         </span>
                         <span class="text-[10px] text-slate-500 font-bold uppercase">{{ v.timestamp }}</span>
                     </div>
 
                     <p class="text-xs {{ 'text-white font-medium' if actual_idx == session.current_v_idx else 'text-slate-400' }} leading-relaxed italic line-clamp-2">
-                        "{{ v.notes }}"
+                        {{ v.notes }}
                     </p>
 
                     {% if actual_idx == session.current_v_idx %}
