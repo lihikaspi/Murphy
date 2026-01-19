@@ -58,14 +58,17 @@ def switch_user(user_id):
 
 @app.route('/process_input', methods=['POST'])
 def process_input():
-    username = request.form.get('username', '').strip()
+    if 'db_user_id' not in session:
+        return redirect(url_for('index'))
+
+    username = session['user_input']['username']
     about = request.form.get('about', '').strip()
     goal = request.form.get('goal', '').strip()
     plan = request.form.get('plan', '').strip()
     wrong = request.form.get('wrong', '').strip()
     pessimism = request.form.get('pessimism', 'Realistic')
 
-    if not all([username, about, goal, plan]):
+    if not all([goal, plan]):  # Username and about are already guaranteed or handled
         return redirect(url_for('index'))
 
     # Sync user background to DB

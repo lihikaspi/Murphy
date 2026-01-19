@@ -67,22 +67,37 @@
                     <i data-lucide="pen-tool" class="w-4 h-4"></i> Initial Plan
                 </a>
 
-                {% set has_versions = session.get('versions') %}
-                <a href="/dashboard"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                   {% if not has_versions %} pointer-events-none opacity-40 {% endif %}
-                   {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Revised Strategy
+                <a
+                    {% if has_versions %}
+                    href="/dashboard"
+                    {% endif %}
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                        {% if not has_versions %}
+                            pointer-events-none opacity-40 cursor-not-allowed
+                        {% else %}
+                        {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard'
+                            else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
+                        {% endif %}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    Revised Strategy
                 </a>
 
                 {% set current_v_idx = session.get('current_v_idx', 0) %}
                 {% set has_followup = has_versions and session['versions'][current_v_idx].get('followup') %}
-                <a href="/followup"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                   {% if not has_followup %} pointer-events-none opacity-40 {% endif %}
-                   {{ 'bg-slate-50 text-slate-900' if request.path == '/followup' else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
-                    <i data-lucide="play-circle" class="w-4 h-4"></i> Followup
+                <a
+                    {% if has_followup %}
+                        href="/followup"
+                    {% endif %}
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                        {% if not has_followup %}
+                           pointer-events-none opacity-40 cursor-not-allowed
+                        {% else %}
+                        {{ 'bg-slate-50 text-slate-900' if request.path == '/followup'
+                            else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
+                        {% endif %}">
+                    <i data-lucide="play-circle" class="w-4 h-4"></i>Followup
                 </a>
+
             </nav>
         </div>
 
