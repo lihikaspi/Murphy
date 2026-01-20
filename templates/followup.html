@@ -1,19 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
+<div class="max-w-8xl mx-auto">
     <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-slate-200 pb-8">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Execution Active</span>
+                <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[12px] font-bold rounded-full uppercase tracking-widest">
+                    Final Severity: {{ session.get('user_input', {}).get('pessimism', 'Realistic') }}
+                </span>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Execution Protocol</h1>
             <p class="text-slate-500">Transforming your revised plan into a concrete timeline.</p>
-        </div>
-        <div class="flex items-center gap-6">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Final Severity: {{ session.get('user_input', {}).get('pessimism', 'Realistic') }}
-            </span>
         </div>
     </header>
 
@@ -38,7 +35,7 @@
                                 <h4 class="font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">{{ task.title }}</h4>
                                 <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold uppercase">{{ task.time }}</span>
                             </div>
-                            <p class="text-sm text-slate-500">{{ task.instruction }}</p>
+                            <p class="text-[15px] text-slate-500">{{ task.instruction }}</p>
                         </div>
                     </div>
                 </label>
@@ -50,16 +47,14 @@
             <div class="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden shadow-xl">
                 <i data-lucide="quote" class="absolute -top-2 -right-2 w-16 h-16 text-white/10"></i>
                 <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Traveler's Advice</h3>
-                <p class="text-sm text-slate-300 italic leading-relaxed">
-                    "{{ data.advice }}"
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    {{ data.advice }}
                 </p>
             </div>
 
             <div class="bg-white p-6 rounded-3xl border border-slate-200">
-                <h3 class="font-bold text-xs uppercase tracking-widest text-slate-400 mb-4">Final Revised Plan</h3>
-                <div class="text-[13px] text-slate-600 leading-relaxed whitespace-pre-wrap">
-                    {{ plan }}
-                </div>
+                <h3 class="font-bold text-[13px] uppercase tracking-widest text-slate-400 mb-4">Final Revised Plan</h3>
+                <div class="text-[13px] text-slate-600 leading-relaxed whitespace-pre-wrap">{{ plan | trim }}</div>
             </div>
         </div>
     </div>

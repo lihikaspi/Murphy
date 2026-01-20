@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-3xl mx-auto pt-8">
+<div class="max-w-8xl mx-auto pt-8">
     <div class="flex items-center justify-between mb-6">
         <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Scenario Maze</span>
 
@@ -89,7 +89,7 @@
 </div>
 
 <div id="scoreModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden fade-in">
         <div class="p-8">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-slate-900">Scoring Rubric</h3>
@@ -101,34 +101,34 @@
             <div class="space-y-6">
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="px-2 py-0.5 bg-cyan-200 text-cyan-700 text-[10px] font-black uppercase rounded">Stress</span>
+                        <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[11px] font-black uppercase rounded">Stress</span>
                     </div>
-                    <p class="text-sm text-slate-600 leading-relaxed mb-3">Reflects the emotional and operational toll this solution requires.</p>
-                    <div class="grid grid-cols-2 gap-4 text-[11px]">
-                        <div><span class="font-bold text-slate-900">1/10:</span> A minor task; zero risk.</div>
-                        <div><span class="font-bold text-slate-900">10/10:</span> Emergency state; high burnout risk.</div>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="px-2 py-0.5 bg-cyan-200 text-cyan-700 text-[10px] font-black uppercase rounded">Deviation</span>
-                    </div>
-                    <p class="text-sm text-slate-600 leading-relaxed mb-3">Measures how much this solution changes your original intent.</p>
-                    <div class="grid grid-cols-2 gap-4 text-[11px]">
-                        <div><span class="font-bold text-slate-900">1/10:</span> Virtually identical to original plan.</div>
-                        <div><span class="font-bold text-slate-900">10/10:</span> Total pivot or starting over.</div>
+                    <p class="text-[15px] text-slate-600 leading-relaxed mb-3">Reflects the emotional and operational toll this solution requires.</p>
+                    <div class="grid grid-cols-2 gap-4 text-[13px]">
+                        <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">1/10</span> A minor task; zero risk.</div>
+                        <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">10/10</span> Emergency state; high burnout risk.</div>
                     </div>
                 </div>
 
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="px-2 py-0.5 bg-cyan-200 text-cyan-700 text-[10px] font-black uppercase rounded">Feasibility</span>
+                        <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[11px] font-black uppercase rounded">Deviation</span>
                     </div>
-                    <p class="text-sm text-slate-600 leading-relaxed mb-3">The likelihood that you can actually achieve this with current resources.</p>
-                    <div class="grid grid-cols-2 gap-4 text-[11px]">
-                        <div><span class="font-bold text-slate-900">1/10:</span> Requires "magic" or 10x budget.</div>
-                        <div><span class="font-bold text-slate-900">10/10:</span> Uses existing skills and budget.</div>
+                    <p class="text-[15px] text-slate-600 leading-relaxed mb-3">Measures how much this solution changes your original intent.</p>
+                    <div class="grid grid-cols-2 gap-4 text-[13px]">
+                        <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">1/10</span> Virtually identical to original plan.</div>
+                        <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">10/10</span> Total pivot or starting over.</div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[11px] font-black uppercase rounded">Feasibility</span>
+                    </div>
+                    <p class="text-[15px] text-slate-600 leading-relaxed mb-3">The likelihood that you can actually achieve this with current resources.</p>
+                    <div class="grid grid-cols-2 gap-4 text-[13px]">
+                        <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">1/10</span> Requires "magic" or 10x budget.</div>
+                        <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">10/10</span> Uses existing skills and budget.</div>
                     </div>
                 </div>
             </div>
