@@ -8,9 +8,15 @@
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Pessimism Level: {{ session.get('user_input', {}).get('pessimism', 'Realistic') }}
             </span>
-            <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
-                Obstacle {{ index }} / {{ total }}
-            </span>
+
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
+                    Obstacle {{ index }} / {{ total }}
+                </span>
+                <button type="button" onclick="toggleScoreModal(true)" class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 transition-colors shadow-sm" title="Explain Scores">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -33,13 +39,11 @@
         <div class="space-y-4">
             {% for option in scenario.options %}
             <label class="block cursor-pointer">
-                {# Formats the dict into a string for the form submission to support existing parsing in plan.html #}
                 {% set opt_str = option.text ~ " [Stress: " ~ option.scores.stress ~ ", Deviation: " ~ option.scores.deviation ~ ", Feasibility: " ~ option.scores.feasibility ~ "]" %}
 
                 <input type="radio" name="choice" value="{{ opt_str }}" class="peer sr-only" {% if loop.first %}checked{% endif %} onclick="document.getElementById('other-box').classList.add('hidden')">
                 <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 transition-all">
                     <div class="flex items-center justify-between mb-3">
-                        {# Access the text key directly #}
                         <span class="font-bold text-slate-800">{{ option.text }}</span>
                         <div class="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-indigo-600 flex items-center justify-center">
                             <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100"></div>
@@ -49,7 +53,6 @@
                     <div class="flex gap-4">
                         {% for label, value in option.scores.items() %}
                             {% set label_cap = label|capitalize %}
-                            {# Severity Logic #}
                             {% if label_cap == 'Feasibility' %}
                                 {% set color_class = 'bg-emerald-100 text-emerald-700' if value >= 8 else 'bg-amber-100 text-amber-700' if value >= 4 else 'bg-rose-100 text-rose-700' %}
                             {% else %}
@@ -84,4 +87,64 @@
         </div>
     </form>
 </div>
+
+<div id="scoreModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-900">Scoring Rubric</h3>
+                <button type="button" onclick="toggleScoreModal(false)" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-cyan-200 text-cyan-700 text-[10px] font-black uppercase rounded">Stress</span>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">Reflects the emotional and operational toll this solution requires.</p>
+                    <div class="grid grid-cols-2 gap-4 text-[11px]">
+                        <div><span class="font-bold text-slate-900">1/10:</span> A minor task; zero risk.</div>
+                        <div><span class="font-bold text-slate-900">10/10:</span> Emergency state; high burnout risk.</div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-cyan-200 text-cyan-700 text-[10px] font-black uppercase rounded">Deviation</span>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">Measures how much this solution changes your original intent.</p>
+                    <div class="grid grid-cols-2 gap-4 text-[11px]">
+                        <div><span class="font-bold text-slate-900">1/10:</span> Virtually identical to original plan.</div>
+                        <div><span class="font-bold text-slate-900">10/10:</span> Total pivot or starting over.</div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-cyan-200 text-cyan-700 text-[10px] font-black uppercase rounded">Feasibility</span>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">The likelihood that you can actually achieve this with current resources.</p>
+                    <div class="grid grid-cols-2 gap-4 text-[11px]">
+                        <div><span class="font-bold text-slate-900">1/10:</span> Requires "magic" or 10x budget.</div>
+                        <div><span class="font-bold text-slate-900">10/10:</span> Uses existing skills and budget.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="toggleScoreModal(false)" class="w-full mt-8 py-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition-all">
+                Got it
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleScoreModal(show) {
+        const modal = document.getElementById('scoreModal');
+        modal.classList.toggle('hidden', !show);
+        modal.classList.toggle('flex', show);
+    }
+</script>
 {% endblock %}
