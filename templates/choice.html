@@ -4,17 +4,17 @@
     <div class="flex items-center justify-between mb-6">
         <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Scenario Maze</span>
 
-        <div class="flex items-center gap-6">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <div class="flex items-center gap-3">
+            <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[12px] font-bold rounded-full uppercase tracking-wider">
                 Pessimism Level: {{ session.get('user_input', {}).get('pessimism', 'Realistic') }}
             </span>
 
             <div class="flex items-center gap-3">
-                <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-full">
+                <span class="px-3 py-1 bg-slate-900 text-white text-[14px] font-bold rounded-full">
                     Obstacle {{ index }} / {{ total }}
                 </span>
-                <button type="button" onclick="toggleScoreModal(true)" class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 transition-colors shadow-sm" title="Explain Scores">
-                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                <button type="button" onclick="toggleScoreModal(true)" class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 transition-colors shadow-sm" title="Explain Scores">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
                 </button>
             </div>
         </div>
@@ -24,17 +24,16 @@
         <div class="bg-red-50/50 px-8 py-6 border-b border-red-100 flex items-center gap-4">
             <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="siren" class="w-8 h-8"></i></div>
             <div>
-                <h2 class="text-lg font-bold text-red-900">{{ scenario.title }}</h2>
-                <p class="text-[10px] text-red-700 font-bold uppercase tracking-tight">Timeline Failure Warning</p>
+                <h2 class="text-[24px] font-bold text-red-900">{{ scenario.title }}</h2>
             </div>
         </div>
         <div class="p-8 md:p-10">
-            <h3 class="text-2xl font-bold text-slate-900 leading-tight">{{ scenario.desc }}</h3>
+            <h3 class="text-[20px] font-bold text-slate-900 leading-tight">{{ scenario.desc }}</h3>
         </div>
     </div>
 
     <form action="/process_maze" method="POST">
-        <h4 class="text-xl font-bold text-slate-900 mb-6 px-2">What would you have done to prepare?</h4>
+        <h4 class="text-xl font-bold text-slate-900 mb-6 px-2">What would you have done?</h4>
 
         <div class="space-y-4">
             {% for option in scenario.options %}
@@ -42,11 +41,11 @@
                 {% set opt_str = option.text ~ " [Stress: " ~ option.scores.stress ~ ", Deviation: " ~ option.scores.deviation ~ ", Feasibility: " ~ option.scores.feasibility ~ "]" %}
 
                 <input type="radio" name="choice" value="{{ opt_str }}" class="peer sr-only" {% if loop.first %}checked{% endif %} onclick="document.getElementById('other-box').classList.add('hidden')">
-                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 transition-all">
+                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-cyan-400 peer-checked:border-cyan-600 peer-checked:bg-cyan-50 transition-all">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="font-bold text-slate-800">{{ option.text }}</span>
-                        <div class="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-indigo-600 flex items-center justify-center">
-                            <div class="w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100"></div>
+                        <span class="font-bold text-[16px] text-slate-800">{{ option.text }}</span>
+                        <div class="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-cyan-600 flex items-center justify-center">
+                            <div class="w-2.5 h-2.5 bg-cyan-600 rounded-full opacity-0 peer-checked:opacity-100"></div>
                         </div>
                     </div>
 
@@ -59,7 +58,7 @@
                                 {% set color_class = 'bg-emerald-100 text-emerald-700' if value <= 3 else 'bg-amber-100 text-amber-700' if value <= 7 else 'bg-rose-100 text-rose-700' %}
                             {% endif %}
 
-                            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded {{ color_class }}">
+                            <span class="text-[11px] font-bold uppercase tracking-widest px-2 py-1 rounded {{ color_class }}">
                                 {{ label_cap }}: {{ value }}
                             </span>
                         {% endfor %}
@@ -70,14 +69,14 @@
 
             <label class="block cursor-pointer">
                 <input type="radio" name="choice" value="Other" class="peer sr-only" onclick="document.getElementById('other-box').classList.remove('hidden')">
-                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/10 transition-all">
+                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-cyan-400 peer-checked:border-cyan-600 peer-checked:bg-cyan-50 transition-all">
                     <span class="font-bold text-slate-800">Other (Your own solution)</span>
                 </div>
             </label>
         </div>
 
         <div id="other-box" class="mt-4 hidden fade-in">
-            <textarea name="other_text" class="w-full h-32 p-4 border-2 border-indigo-100 rounded-2xl text-sm focus:ring-0 focus:border-indigo-600" placeholder="Type your strategic patch..."></textarea>
+            <textarea name="other_text" class="w-full h-18 p-4 border-2 border-indigo-100 rounded-2xl text-[16px] focus:ring-0 focus:border-indigo-600" placeholder="Type your strategic patch..."></textarea>
         </div>
 
         <div class="mt-10 flex justify-end">

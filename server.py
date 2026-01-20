@@ -17,13 +17,17 @@ Session(app)
 def inject_global_vars():
     """Injects global variables into all templates."""
     user_plans = []
-    if 'user_input' in session and 'username' in session['user_input']:
-        user_plans = db_logic.get_user_plans(session['user_input']['username'])
+
+    current_user_id = session.get('db_user_id', -1)
+    if current_user_id != -1 and 'user_input' in session:
+        username = session['user_input'].get('username')
+        if username:
+            user_plans = db_logic.get_user_plans(username)
 
     return dict(
         all_users=db_logic.get_all_users(),
         has_versions=len(session.get('versions', [])) > 0,
-        user_history=user_plans  # Added for sidebar
+        user_history=user_plans
     )
 
 
@@ -36,8 +40,14 @@ def add_to_history(role, content):
 
 @app.route('/')
 def index():
-    return render_template('input.html', data=session.get('user_input', {}))
+    # Initialize the mock default user if no session exists
+    if 'db_user_id' not in session:
+        session['db_user_id'] = -1
+        session['user_input'] = {
+            'pessimism': 'Realistic'
+        }
 
+    return render_template('input.html', data=session.get('user_input', {}))
 
 @app.route('/add_user', methods=['POST'])
 def add_new_user():
@@ -326,9 +336,25 @@ def load_plan(plan_id):
 
 @app.route('/reset')
 def reset():
-    session.clear()
-    return redirect(url_for('index'))
+    """Clears the project progress but keeps the user profile active."""
+    # Keys to keep (user profile info)
+    keys_to_keep = ['db_user_id', 'user_input']
+    saved_data = {k: session.get(k) for k in keys_to_keep}
 
+    # Clear project-specific data only
+    session.clear()
+
+    # Restore user info and auto-fill the 'about' for the input page
+    if saved_data['db_user_id'] != -1:
+        session['db_user_id'] = saved_data['db_user_id']
+        # We clear goal/plan but keep username/about for auto-fill
+        session['user_input'] = {
+            'username': saved_data['user_input'].get('username'),
+            'about': saved_data['user_input'].get('about'),
+            'pessimism': 'Realistic'  # Default for new session
+        }
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=config.DEBUG, port=5000)
