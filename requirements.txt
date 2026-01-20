@@ -6,3 +6,4 @@ flask-cors
 python-dotenv
 pinecone
 supabase
+gunicorn
