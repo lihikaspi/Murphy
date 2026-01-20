@@ -177,6 +177,12 @@ def dashboard():
 def refine():
     feedback = request.form.get('feedback', '').strip()
     new_pessimism = request.form.get('pessimism')
+
+    # 1. Capture the existing level before it's updated
+    old_pessimism = session['user_input'].get('pessimism', 'Realistic')
+    if new_pessimism == old_pessimism:
+        old_pessimism = None
+
     if new_pessimism:
         session['user_input']['pessimism'] = new_pessimism
 
@@ -201,7 +207,13 @@ def refine():
         "disliked_improvements": [i['desc'] for i in base_version['improvements'] if i.get('disliked')]
     }
 
-    res = llm_logic.refine_analysis(session['user_input'], feedback, binary, session['chat_history'])
+    res = llm_logic.refine_analysis(
+        session['user_input'],
+        feedback,
+        binary,
+        session['chat_history'],
+        old_pessimism
+    )
 
     if res:
         add_to_history("user", f"Refining version {v_idx + 1}. Feedback: {feedback}")

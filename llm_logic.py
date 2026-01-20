@@ -118,13 +118,15 @@ def generate_dashboard(data, maze_results, history):
     }
 
 
-def refine_analysis(data, feedback_text, binary_feedback, history):
+def refine_analysis(data, feedback_text, binary_feedback, history, old_pessimism):
     """
     Step 3: Refines the revised plan based on user feedback (likes/dislikes).
     """
     system = prompts.FEEDBACK_PROMPT_TEMPLATE.format(
         user_info=data.get('about'),
-        plan=data.get('plan')
+        plan=data.get('plan'),
+        pessimism=data.get('pessimism', 'Realistic'),
+        old_pessimism=f"Changed from: {old_pessimism}" if old_pessimism is not None else ""
     )
 
     user_prompt = (
