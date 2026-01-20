@@ -50,7 +50,11 @@ def get_user_plans(username):
     if not user_res.data:
         return []
 
-    plans_res = supabase.table("plans").select("*").eq("user_id", user_res.data[0]['id']).execute()
+    plans_res = supabase.table("plans") \
+        .select("*") \
+        .eq("user_id", user_res.data[0]['id']) \
+        .order("id", desc=True) \
+        .execute()
     return plans_res.data
 
 
