@@ -25,7 +25,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                <a href="/followup" class="px-6 py-2 bg-emerald-600 text-white rounded-lg text-[14px] font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                <a href="/followup" class="px-6 py-2 bg-emerald-600 text-white rounded-lg text-[15px] font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
                     Finish <i data-lucide="check-circle" class="w-4 h-4"></i>
                 </a>
             </div>
@@ -34,14 +34,14 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-[30rem] flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b bg-slate-50/50 font-bold text-slate-700 text-[13px] flex items-center gap-2 uppercase tracking-wider">
+            <div class="px-6 py-4 border-b bg-slate-50/50 font-bold text-slate-700 text-[14px] flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="file-text" class="w-4 h-4"></i> Original Plan
             </div>
             <div class="p-6 overflow-y-auto text-[15px] text-slate-500 whitespace-pre-wrap leading-relaxed">{{ user_input.plan | trim}}</div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 h-[30rem] flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b bg-indigo-50/30 font-bold text-indigo-700 text-[13px] flex items-center gap-2 uppercase tracking-wider">
+            <div class="px-6 py-4 border-b bg-indigo-50/30 font-bold text-indigo-700 text-[14px] flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="shield-check" class="w-4 h-4"></i> Revised Strategy
             </div>
             <div class="p-6 overflow-y-auto text-[15px] text-slate-800 leading-relaxed font-medium">
@@ -50,7 +50,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-red-100 h-[40rem] flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b bg-red-50/30 font-bold text-red-700 text-[13px] flex items-center gap-2 uppercase tracking-wider">
+            <div class="px-6 py-4 border-b bg-red-50/30 font-bold text-red-700 text-[14px] flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="alert-octagon" class="w-4 h-4"></i> Identified Weaknesses
             </div>
             <div class="p-6 overflow-y-auto space-y-3">
@@ -86,7 +86,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 h-[40rem] flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b bg-emerald-50/30 font-bold text-emerald-700 text-[13px] flex items-center gap-2 uppercase tracking-wider">
+            <div class="px-6 py-4 border-b bg-emerald-50/30 font-bold text-emerald-700 text-[14px] flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Strategic Improvements
             </div>
             <div class="p-6 overflow-y-auto space-y-3">
@@ -125,8 +125,8 @@
     <section class="mb-16">
         <div class="flex items-center gap-3 mb-8 px-2">
             <h2 class="text-xl font-bold text-slate-900">Timeline Summary</h2>
-            <button type="button" onclick="toggleScoreModal(true)" class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 transition-colors shadow-sm" title="Explain Scores">
-                <i data-lucide="help-circle" class="w-4 h-4"></i>
+            <button type="button" onclick="toggleScoreModal(true)" class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 transition-colors shadow-sm" title="Explain Scores">
+                <i data-lucide="help-circle" class="w-5 h-5"></i>
             </button>
         </div>
 
@@ -237,10 +237,10 @@
             <div class="space-y-6">
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[11px] font-black uppercase rounded">Stress</span>
+                        <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[12px] font-black uppercase rounded">Stress</span>
                     </div>
-                    <p class="text-[15px] text-slate-600 leading-relaxed mb-3">Reflects the emotional and operational toll this solution requires.</p>
-                    <div class="grid grid-cols-2 gap-4 text-[13px]">
+                    <p class="text-[16px] text-slate-600 leading-relaxed mb-3">Reflects the emotional and operational toll this solution requires.</p>
+                    <div class="grid grid-cols-2 gap-3 text-[14px]">
                         <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">1/10</span> A minor task; zero risk.</div>
                         <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">10/10</span> Emergency state; high burnout risk.</div>
                     </div>
@@ -250,10 +250,10 @@
                     <div class="flex items-center gap-2 mb-2">
                         <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[11px] font-black uppercase rounded">Deviation</span>
                     </div>
-                    <p class="text-[15px] text-slate-600 leading-relaxed mb-3">Measures how much this solution changes your original intent.</p>
-                    <div class="grid grid-cols-2 gap-4 text-[13px]">
-                        <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">1/10</span> Virtually identical to original plan.</div>
-                        <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">10/10</span> Total pivot or starting over.</div>
+                    <p class="text-[16px] text-slate-600 leading-relaxed mb-3">Measures how much this solution changes your original intent.</p>
+                    <div class="grid grid-cols-2 gap-3 text-[14px]">
+                        <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">1/10</span> Virtually identical to original plan.</div>
+                        <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">10/10</span> Total pivot or starting over.</div>
                     </div>
                 </div>
 
@@ -261,8 +261,8 @@
                     <div class="flex items-center gap-2 mb-2">
                         <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-[11px] font-black uppercase rounded">Feasibility</span>
                     </div>
-                    <p class="text-[15px] text-slate-600 leading-relaxed mb-3">The likelihood that you can actually achieve this with current resources.</p>
-                    <div class="grid grid-cols-2 gap-4 text-[13px]">
+                    <p class="text-[16px] text-slate-600 leading-relaxed mb-3">The likelihood that you can actually achieve this with current resources.</p>
+                    <div class="grid grid-cols-2 gap-3 text-[14px]">
                         <div><span class="px-1 py-0.5 font-bold bg-red-100 text-red-700 rounded">1/10</span> Requires "magic" or 10x budget.</div>
                         <div><span class="px-1 py-0.5 font-bold bg-emerald-100 text-emerald-700 rounded">10/10</span> Uses existing skills and budget.</div>
                     </div>
