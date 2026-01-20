@@ -16,9 +16,14 @@ Session(app)
 @app.context_processor
 def inject_global_vars():
     """Injects global variables into all templates."""
+    user_plans = []
+    if 'user_input' in session and 'username' in session['user_input']:
+        user_plans = db_logic.get_user_plans(session['user_input']['username'])
+
     return dict(
         all_users=db_logic.get_all_users(),
-        has_versions=len(session.get('versions', [])) > 0
+        has_versions=len(session.get('versions', [])) > 0,
+        user_history=user_plans  # Added for sidebar
     )
 
 
@@ -268,16 +273,55 @@ def followup():
     v_idx = session.get('current_v_idx', 0)
     current = session['versions'][v_idx]
 
-    # Feature 2: Followup data is attached to the version upon first access
     if 'followup' not in current:
         res = llm_logic.generate_followup(current['revised_plan'], session['user_input']['about'],
                                           session['chat_history'])
         add_to_history("user", "Construct my execution plan.")
         add_to_history("model", "Execution plan and advice generated.")
+
         current['followup'] = res
         session.modified = True
 
+        # Sync the new followup data to the dedicated database column
+        db_logic.update_existing_plan(
+            plan_id=session['plan_db_id'],
+            versions=session['versions'],
+            chat_history=session['chat_history'],
+            followup_data=res  # Pass the result to db_logic
+        )
+
     return render_template('followup.html', data=current['followup'], plan=current['revised_plan'])
+
+@app.route('/load_plan/<int:plan_id>')
+def load_plan(plan_id):
+    """Reloads a plan from the database into the session."""
+    plan_data = db_logic.get_plan_by_id(plan_id)
+    if not plan_data:
+        return redirect(url_for('index'))
+
+    # Reconstruct session
+    session['plan_db_id'] = plan_data['id']
+    session['db_user_id'] = plan_data['user_id']
+    session['user_input'] = {
+        'goal': plan_data['goal'],
+        'plan': plan_data['original_plan'],
+        'pessimism': plan_data['pessimism'],
+        'wrong': plan_data.get('concerns', ''),
+        # We need the username/about from the session or DB
+        'username': session.get('user_input', {}).get('username'),
+        'about': session.get('user_input', {}).get('about')
+    }
+    session['maze_answers'] = plan_data['maze_results']
+    session['versions'] = plan_data['versions']
+    session['chat_history'] = plan_data['chat_history']
+    session['current_v_idx'] = len(plan_data['versions']) - 1
+    session.modified = True
+
+    # Check if the latest version has a followup
+    latest_version = plan_data['versions'][-1]
+    if 'followup' in latest_version:
+        return redirect(url_for('followup'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/reset')

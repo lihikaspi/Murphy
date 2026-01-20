@@ -13,7 +13,7 @@ def sync_user(username, about):
     return response.data[0]['id']
 
 
-def create_plan_entry(user_id, user_input, maze_results, versions, chat_history):
+def create_plan_entry(user_id, user_input, maze_results, versions, chat_history, followup_data=None):
     """Inserts the initial plan after the maze is completed."""
     response = supabase.table("plans").insert({
         "user_id": user_id,
@@ -23,19 +23,22 @@ def create_plan_entry(user_id, user_input, maze_results, versions, chat_history)
         "concerns": user_input.get('wrong', ''),
         "maze_results": maze_results,
         "versions": versions,
-        "chat_history": chat_history
+        "chat_history": chat_history,
+        "followup": followup_data  # Save follow-up data here
     }).execute()
     return response.data[0]['id']
 
 
-def update_existing_plan(plan_id, versions, chat_history, pessimism=None):
-    """Updates the plan row with new versions or adjusted pessimism."""
+def update_existing_plan(plan_id, versions, chat_history, pessimism=None, followup_data=None):
+    """Updates the plan row with new versions, adjusted pessimism, or followup data."""
     update_data = {
         "versions": versions,
         "chat_history": chat_history
     }
     if pessimism:
         update_data["pessimism"] = pessimism
+    if followup_data:
+        update_data["followup"] = followup_data # Update the dedicated column
 
     supabase.table("plans").update(update_data).eq("id", plan_id).execute()
 
@@ -64,4 +67,10 @@ def add_user(username, about):
         "about": about
     }).execute()
     return response.data[0]
+
+
+def get_plan_by_id(plan_id):
+    """Fetches a specific plan by ID."""
+    response = supabase.table("plans").select("*").eq("id", plan_id).single().execute()
+    return response.data
 
