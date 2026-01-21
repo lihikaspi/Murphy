@@ -39,15 +39,39 @@ def add_to_history(role, content):
 
 
 @app.route('/')
+def welcome():
+    """
+    Landing page: Resets project progress every time it is reached,
+    but preserves the active user selection.
+    """
+    # 1. Capture current identity context before clearing
+    # Defaults to -1 if the system was just launched
+    current_id = session.get('db_user_id', -1)
+    current_input = session.get('user_input', {})
+
+    # 2. Clear all project data (chat_history, versions, plan_db_id, etc.)
+    session.clear()
+
+    # 3. Restore identity context
+    session['db_user_id'] = current_id
+    session['user_input'] = {
+        'username': current_input.get('username'),
+        'about': current_input.get('about'),
+        'pessimism': 'Realistic'  # Reset to default severity for new plans
+    }
+
+    return render_template('welcome.html')
+
+
+@app.route('/input')
 def index():
-    # Initialize the mock default user if no session exists
-    if 'db_user_id' not in session:
-        session['db_user_id'] = -1
-        session['user_input'] = {
-            'pessimism': 'Realistic'
-        }
+    """Input page: Where the user submits their goal and plan."""
+    # Prevent accessing input without a selected user
+    if session.get('db_user_id', -1) == -1:
+        return redirect(url_for('welcome'))
 
     return render_template('input.html', data=session.get('user_input', {}))
+
 
 @app.route('/add_user', methods=['POST'])
 def add_new_user():
@@ -62,22 +86,24 @@ def add_new_user():
 
 @app.route('/switch_user/<int:user_id>')
 def switch_user(user_id):
-    """Clears the session and starts a blank state for the selected user."""
-    session.clear()
+    """Updates the session user but stays on the current page to keep context."""
     user_data = db_logic.supabase.table("users").select("*").eq("id", user_id).single().execute()
     if user_data.data:
         session['db_user_id'] = user_data.data['id']
         session['user_input'] = {
             'username': user_data.data['username'],
-            'about': user_data.data['about']
+            'about': user_data.data['about'],
+            'pessimism': 'Realistic'
         }
-    return redirect(url_for('index'))
+
+    # Redirect back to where the user was (Welcome or Dashboard)
+    return redirect(request.referrer or url_for('welcome'))
 
 
 @app.route('/process_input', methods=['POST'])
 def process_input():
-    if 'db_user_id' not in session:
-        return redirect(url_for('index'))
+    if 'db_user_id' not in session or session['db_user_id'] == -1:
+        return redirect(url_for('welcome'))
 
     username = session['user_input']['username']
     about = request.form.get('about', '').strip()

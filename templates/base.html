@@ -33,79 +33,78 @@
 </head>
 <body class="flex min-h-screen text-slate-900">
 
+    {% set is_welcome = request.path == '/' %}
+    {% set current_user_id = session.get('db_user_id', -1) %}
+
     <aside class="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col fixed inset-y-0 z-50">
         <div class="p-8 pb-4 flex flex-col h-full overflow-hidden">
-            <div class="flex items-center gap-3 text-slate-900 mb-8 shrink-0">
+            <a href="/" class="flex items-center gap-3 text-slate-900 mb-8 shrink-0 hover:opacity-80 transition-opacity">
                 <img src="{{ url_for('static', filename='images/broken_clock.png') }}" class="w-12 h-12 object-contain" alt="Logo">
                 <span class="text-[30px] font-bold tracking-tight">Murphy</span>
-            </div>
+            </a>
 
             <div class="mb-8 px-1 shrink-0">
                 <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-2">Active User</label>
-                <select onchange="handleUserChange(this)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-orange-200 outline-none cursor-pointer transition-all">
-                    {# Only show "Select Profile" if the current user is the mock ID -1 #}
-                    {% if session.get('db_user_id', -1) == -1 %}
+                <select onchange="handleUserChange(this)"
+                        {{ 'disabled' if is_welcome else '' }}
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-orange-200 outline-none transition-all
+                        {{ 'cursor-not-allowed opacity-50 bg-slate-100' if is_welcome else 'cursor-pointer' }}">
+
+                    {% if is_welcome %}
+                        {# Force "Select Profile" view in sidebar while on landing page #}
                         <option value="-1" selected>Select Profile...</option>
+                    {% else %}
+                        {% if current_user_id == -1 %}
+                            <option value="-1" selected>Select Profile...</option>
+                        {% endif %}
+                        {% for u in all_users %}
+                            <option value="{{ u.id }}" {% if current_user_id == u.id %}selected{% endif %}>
+                                {{ u.username }}
+                            </option>
+                        {% endfor %}
                     {% endif %}
                     <option value="NEW" class="font-bold text-amber-700">+ Register New User</option>
-                    <hr>
-                    {% for u in all_users %}
-                    <option value="{{ u.id }}" {% if session.get('db_user_id') == u.id %}selected{% endif %}>
-                        {{ u.username }}
-                    </option>
-                    {% endfor %}
                 </select>
             </div>
 
-            {% if session.get('user_input', {}).get('goal') %}
-            <div class="mb-8 px-1 shrink-0">
-                <p class="text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-1">Current Goal</p>
-                <p class="text-[15px] text-slate-500 leading-relaxed line-clamp-3" title="{{ session['user_input']['goal'] }}">
-                    {{ session['user_input']['goal'] }}
-                </p>
-            </div>
-            {% endif %}
-
             <nav class="space-y-1 mb-8 shrink-0">
-                <a href="/" class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
-                    {{ 'bg-slate-50 text-slate-900' if request.path == '/' or request.path == '/maze'
-                    else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                <a {% if not is_welcome and current_user_id != -1 %} href="/input" {% endif %}
+                    class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
+                    {% if is_welcome or current_user_id == -1 %}
+                        pointer-events-none opacity-40 grayscale cursor-not-allowed
+                    {% else %}
+                        {{ 'bg-slate-50 text-slate-900' if request.path == '/input' or request.path == '/maze'
+                        else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
+                    {% endif %}">
                     <i data-lucide="pen-tool" class="w-5 h-5"></i> Initial Plan
                 </a>
 
-                <a
-                    {% if has_versions %}
-                    href="/dashboard"
-                    {% endif %}
-                        class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
-                        {% if not has_versions %}
-                            pointer-events-none opacity-40 cursor-not-allowed
-                        {% else %}
+                <a {% if has_versions and not is_welcome %} href="/dashboard" {% endif %}
+                    class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
+                    {% if not has_versions or is_welcome %}
+                        pointer-events-none opacity-40 grayscale cursor-not-allowed
+                    {% else %}
                         {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard'
-                            else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
-                        {% endif %}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                    Revised Strategy
+                        else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
+                    {% endif %}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Revised Strategy
                 </a>
 
                 {% set current_v_idx = session.get('current_v_idx', 0) %}
                 {% set has_followup = has_versions and session['versions'][current_v_idx].get('followup') %}
-                <a
-                    {% if has_followup %}
-                        href="/followup"
-                    {% endif %}
+                <a {% if has_followup and not is_welcome %} href="/followup" {% endif %}
                     class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
-                        {% if not has_followup %}
-                           pointer-events-none opacity-40 cursor-not-allowed
-                        {% else %}
+                    {% if not has_followup or is_welcome %}
+                        pointer-events-none opacity-40 grayscale cursor-not-allowed
+                    {% else %}
                         {{ 'bg-slate-50 text-slate-900' if request.path == '/followup'
-                            else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
-                        {% endif %}">
-                    <i data-lucide="play-circle" class="w-5 h-5"></i>Followup
+                        else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
+                    {% endif %}">
+                    <i data-lucide="play-circle" class="w-5 h-5"></i> Followup
                 </a>
             </nav>
 
-            <div class="px-1 flex-1 flex flex-col min-h-0">
+            <div class="px-1 flex-1 flex flex-col min-h-0 {{ 'hidden' if is_welcome }}">
                 <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-4">Plan History</label>
 
                 <div class="space-y-1 overflow-y-auto pr-2 custom-scroll flex-1">
@@ -114,12 +113,9 @@
                        class="group flex items-center gap-2 px-2 py-2.5 rounded-lg text-[14px] font-medium transition-all
                               {{ 'bg-amber-50 text-amber-700 border border-amber-100 shadow-sm' if session.get('plan_db_id') == plan.id else 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
 
-                        {# Logic to switch icons based on completion status #}
                         {% if plan.followup %}
-                            {# Symbolizes a finalized checklist/todo #}
                             <i data-lucide="clipboard-check" class="w-4 h-4 shrink-0 opacity-60"></i>
                         {% else %}
-                            {# Symbolizes an active timeline/incomplete session #}
                             <i data-lucide="square-pen" class="w-4 h-4 shrink-0 opacity-60"></i>
                         {% endif %}
 
@@ -176,7 +172,8 @@
             const val = select.value;
             if (val === "NEW") {
                 toggleUserModal(true);
-                select.value = "{{ session.get('db_user_id', '-1') }}";
+                // Reset select value to the current active one or placeholder if cancel is pressed
+                select.value = "{{ current_user_id }}";
             } else if (val && val !== "-1") {
                 window.location.href = "/switch_user/" + val;
             }
