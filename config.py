@@ -13,5 +13,5 @@ PINECONE_INDEX = "murphy-plans"
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
-SECRET_KEY = "murphy_v2_secret_key"
-DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY")
+DEBUG = os.getenv("FLASK_DEBUG", "False") == "True"
