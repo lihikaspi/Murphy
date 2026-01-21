@@ -44,28 +44,29 @@
             </a>
 
             <div class="mb-8 px-1 shrink-0">
-                <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-2">Active User</label>
-                <select onchange="handleUserChange(this)"
-                        {{ 'disabled' if is_welcome else '' }}
-                        class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-orange-200 outline-none transition-all
-                        {{ 'cursor-not-allowed opacity-50 bg-slate-100' if is_welcome else 'cursor-pointer' }}">
+                <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-2">Active User: </label>
 
-                    {% if is_welcome %}
-                        {# Force "Select Profile" view in sidebar while on landing page #}
-                        <option value="-1" selected>Select Profile...</option>
-                    {% else %}
-                        {% if current_user_id == -1 %}
-                            <option value="-1" selected>Select Profile...</option>
-                        {% endif %}
-                        {% for u in all_users %}
-                            <option value="{{ u.id }}" {% if current_user_id == u.id %}selected{% endif %}>
-                                {{ u.username }}
-                            </option>
-                        {% endfor %}
-                    {% endif %}
-                    <option value="NEW" class="font-bold text-amber-700">+ Register New User</option>
-                </select>
+                {% if is_welcome %}
+                    <p class="text-[15px] text-slate-400 font-medium">No active user</p>
+                {% else %}
+                    <p class="text-[17px] font-extrabold text-slate-900 mb-3">
+                        {{ all_users | selectattr("id", "equalto", current_user_id) | map(attribute="username") | first or "Unknown User" }}
+                    </p>
+
+                    <a href="/" class="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-[10x] font-bold text-slate-600 hover:bg-amber-50 hover:text-amber-900 hover:border-amber-200 transition-colors">
+                        <i data-lucide="user-minus" class="w-3.5 h-3.5"></i> Change User
+                    </a>
+                {% endif %}
             </div>
+
+            {% if session.get('user_input', {}).get('goal') and not is_welcome %}
+            <div class="mb-8 px-1 shrink-0 fade-in">
+                <p class="text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-1">Current Goal</p>
+                <p class="text-[15px] text-slate-500 leading-relaxed line-clamp-3 font-medium" title="{{ session['user_input']['goal'] }}">
+                    {{ session['user_input']['goal'] }}
+                </p>
+            </div>
+            {% endif %}
 
             <nav class="space-y-1 mb-8 shrink-0">
                 <a {% if not is_welcome and current_user_id != -1 %} href="/input" {% endif %}
@@ -110,13 +111,13 @@
                 <div class="space-y-1 overflow-y-auto pr-2 custom-scroll flex-1">
                     {% for plan in user_history %}
                     <a href="/load_plan/{{ plan.id }}"
-                       class="group flex items-center gap-2 px-2 py-2.5 rounded-lg text-[14px] font-medium transition-all
+                       class="group flex items-center gap-1.5 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-all
                               {{ 'bg-amber-50 text-amber-700 border border-amber-100 shadow-sm' if session.get('plan_db_id') == plan.id else 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
 
                         {% if plan.followup %}
-                            <i data-lucide="clipboard-check" class="w-4 h-4 shrink-0 opacity-60"></i>
+                            <i data-lucide="clipboard-check" class="w-5 h-5 shrink-0 opacity-60"></i>
                         {% else %}
-                            <i data-lucide="square-pen" class="w-4 h-4 shrink-0 opacity-60"></i>
+                            <i data-lucide="square-pen" class="w-5 h-5 shrink-0 opacity-60"></i>
                         {% endif %}
 
                         <span class="truncate w-full" title="{{ plan.goal }}">
