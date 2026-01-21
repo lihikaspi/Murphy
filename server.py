@@ -41,24 +41,12 @@ def add_to_history(role, content):
 @app.route('/')
 def welcome():
     """
-    Landing page: Resets project progress every time it is reached,
-    but preserves the active user selection.
+    Landing page: Renders the welcome view.
+    Does NOT clear the session so that logo clicks preserve progress.
     """
-    # 1. Capture current identity context before clearing
-    # Defaults to -1 if the system was just launched
-    current_id = session.get('db_user_id', -1)
-    current_input = session.get('user_input', {})
-
-    # 2. Clear all project data (chat_history, versions, plan_db_id, etc.)
-    session.clear()
-
-    # 3. Restore identity context
-    session['db_user_id'] = current_id
-    session['user_input'] = {
-        'username': current_input.get('username'),
-        'about': current_input.get('about'),
-        'pessimism': 'Realistic'  # Reset to default severity for new plans
-    }
+    if 'db_user_id' not in session:
+        session['db_user_id'] = -1
+        session['user_input'] = {'pessimism': 'Realistic'}
 
     return render_template('welcome.html')
 
@@ -86,18 +74,38 @@ def add_new_user():
 
 @app.route('/switch_user/<int:user_id>')
 def switch_user(user_id):
-    """Updates the session user but stays on the current page to keep context."""
-    user_data = db_logic.supabase.table("users").select("*").eq("id", user_id).single().execute()
-    if user_data.data:
-        session['db_user_id'] = user_data.data['id']
-        session['user_input'] = {
-            'username': user_data.data['username'],
-            'about': user_data.data['about'],
-            'pessimism': 'Realistic'
-        }
+    """
+    Updates the session user identity.
+    Clears the session ONLY if a DIFFERENT user is selected.
+    """
+    old_id = session.get('db_user_id', -1)
 
-    # Redirect back to where the user was (Welcome or Dashboard)
-    return redirect(request.referrer or url_for('welcome'))
+    # Only clear and reload if the user identity actually changes
+    if user_id != old_id:
+        session.clear()
+        user_data = db_logic.supabase.table("users").select("*").eq("id", user_id).single().execute()
+        if user_data.data:
+            session['db_user_id'] = user_data.data['id']
+            session['user_input'] = {
+                'username': user_data.data['username'],
+                'about': user_data.data['about'],
+                'pessimism': 'Realistic'
+            }
+
+    # Redirect back to welcome so they can click "Get Started"
+    return redirect(url_for('welcome'))
+
+
+@app.route('/change_user')
+def change_user():
+    """
+    Explicitly clears the session and returns to the landing page.
+    Triggered by the 'Change User' button in the sidebar.
+    """
+    session.clear()
+    session['db_user_id'] = -1
+    session['user_input'] = {'pessimism': 'Realistic'}
+    return redirect(url_for('welcome'))
 
 
 @app.route('/process_input', methods=['POST'])

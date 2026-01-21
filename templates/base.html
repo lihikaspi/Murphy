@@ -53,7 +53,7 @@
                         {{ all_users | selectattr("id", "equalto", current_user_id) | map(attribute="username") | first or "Unknown User" }}
                     </p>
 
-                    <a href="/" class="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-[10x] font-bold text-slate-600 hover:bg-amber-50 hover:text-amber-900 hover:border-amber-200 transition-colors">
+                    <a href="{{ url_for('change_user') }}" class="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-[10x] font-bold text-slate-600 hover:bg-amber-50 hover:text-amber-900 hover:border-amber-200 transition-colors">
                         <i data-lucide="user-minus" class="w-3.5 h-3.5"></i> Change User
                     </a>
                 {% endif %}
