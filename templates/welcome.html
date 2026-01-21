@@ -10,12 +10,12 @@
             </p>
         </div>
 
-        <div class="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 max-w-md mx-auto">
+        <form action="/switch_user" method="POST" class="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 max-w-md mx-auto">
             <h3 class="text-lg font-bold text-slate-900 mb-6 uppercase tracking-widest">Pick a user to begin</h3>
 
             <div class="space-y-6">
                 <div class="relative">
-                    <select onchange="handleWelcomeUserChange(this)"
+                    <select name="user_id" onchange="handleWelcomeUserChange(this)"
                             class="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-4 text-base font-bold text-slate-700 focus:ring-2 focus:ring-amber-500 outline-none cursor-pointer transition-all">
                         <option value="-1" {% if session.get('db_user_id', -1) == -1 %}selected{% endif %}>Select Profile...</option>
                         <option value="NEW" class="font-bold text-amber-700">+ Register New User</option>
@@ -32,21 +32,17 @@
                     </div>
                 </div>
 
-                <a href="{{ url_for('index') }}"
+                <button type="submit"
                    id="getStartedBtn"
+                   {% if session.get('db_user_id', -1) == -1 %}disabled{% endif %}
                    class="block w-full px-8 py-5 bg-amber-700 text-white text-[16px] font-bold rounded-xl shadow-xl hover:bg-amber-600 transition-all active:scale-95
-                          {% if session.get('db_user_id', -1) == -1 %}pointer-events-none opacity-50 cursor-not-allowed{% endif %}">
+                          disabled:opacity-50 disabled:cursor-not-allowed">
                     Get Started
-                </a>
+                </button>
             </div>
-        </div>
+        </form>
     </div>
-
-    <div class="fixed bottom-8 right-8 max-w-[280px] pointer-events-none hidden lg:block">
-        <img src="{{ url_for('static', filename='images/nick_with_clock.png') }}"
-             alt="Nick with Clock"
-             class="w-full h-auto object-contain drop-shadow-2xl">
-    </div>
+    ...
 </div>
 
 <script>
@@ -54,23 +50,22 @@
         const val = select.value;
         const btn = document.getElementById('getStartedBtn');
 
-        // 1. Instant UI Logic: Toggle button state locally
+        // 1. Logic: Only toggle UI state, do NOT redirect/reload here
         if (val === "-1") {
-            btn.classList.add('pointer-events-none', 'opacity-50', 'cursor-not-allowed');
-        } else {
-            btn.classList.remove('pointer-events-none', 'opacity-50', 'cursor-not-allowed');
-        }
-
-        // 2. Redirect/Action Logic
-        if (val === "NEW") {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else if (val === "NEW") {
             toggleUserModal(true);
-            // Revert select display to current session user if modal is closed
+            // Revert select display to current active session user
             select.value = "{{ session.get('db_user_id', -1) }}";
-            // Re-check button state after revert
-            if (select.value === "-1") btn.classList.add('pointer-events-none', 'opacity-50', 'cursor-not-allowed');
-        } else if (val !== "-1") {
-            // Only update the server session if an actual user is selected
-            window.location.href = "/switch_user/" + val;
+            if (select.value === "-1") {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        } else {
+            // User selected an existing profile: just enable the button
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
 </script>

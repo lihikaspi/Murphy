@@ -38,6 +38,28 @@ def add_to_history(role, content):
     session.modified = True
 
 
+def perform_switch_user(user_id):
+    old_id = session.get('db_user_id', -1)
+
+    # Only clear everything if we are switching to a DIFFERENT person
+    if user_id != old_id:
+        session.clear()
+        session['db_user_id'] = user_id
+
+    # Refresh profile info (About/Username) from DB
+    user_data = db_logic.supabase.table("users").select("*").eq("id", user_id).single().execute()
+    if user_data.data:
+        if 'user_input' not in session:
+            session['user_input'] = {'pessimism': 'Realistic'}
+
+        # Update profile info while keeping draft fields (goal/plan)
+        session['user_input'].update({
+            'username': user_data.data['username'],
+            'about': user_data.data['about']
+        })
+        session['db_user_id'] = user_data.data['id']
+
+
 @app.route('/')
 def welcome():
     """
@@ -63,37 +85,23 @@ def index():
 
 @app.route('/add_user', methods=['POST'])
 def add_new_user():
-    """Handles adding a new user via the sidebar popup."""
+    """Handles adding a new user and going straight to input."""
     username = request.form.get('username')
     about = request.form.get('about')
     if username and about:
         new_user = db_logic.add_user(username, about)
-        return redirect(url_for('switch_user', user_id=new_user['id']))
-    return redirect(url_for('index'))
-
-
-@app.route('/switch_user/<int:user_id>')
-def switch_user(user_id):
-    """
-    Updates the session user identity.
-    Clears the session ONLY if a DIFFERENT user is selected.
-    """
-    old_id = session.get('db_user_id', -1)
-
-    # Only clear and reload if the user identity actually changes
-    if user_id != old_id:
-        session.clear()
-        user_data = db_logic.supabase.table("users").select("*").eq("id", user_id).single().execute()
-        if user_data.data:
-            session['db_user_id'] = user_data.data['id']
-            session['user_input'] = {
-                'username': user_data.data['username'],
-                'about': user_data.data['about'],
-                'pessimism': 'Realistic'
-            }
-
-    # Redirect back to welcome so they can click "Get Started"
+        perform_switch_user(new_user['id'])
+        return redirect(url_for('index'))
     return redirect(url_for('welcome'))
+
+
+@app.route('/switch_user', methods=['POST'])
+def switch_user_route():
+    """Handles 'Get Started' click: updates user and goes to input page."""
+    user_id = int(request.form.get('user_id', -1))
+    if user_id != -1:
+        perform_switch_user(user_id)
+    return redirect(url_for('index'))
 
 
 @app.route('/change_user')
