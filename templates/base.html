@@ -47,7 +47,7 @@
                 <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-2">Active User: </label>
 
                 {% if is_welcome %}
-                    <p class="text-[15px] text-slate-400 font-medium">No active user</p>
+                    <p class="text-[15px] text-slate-400 font-medium">No user chosen yet</p>
                 {% else %}
                     <p class="text-[17px] font-extrabold text-slate-900 mb-3">
                         {{ all_users | selectattr("id", "equalto", current_user_id) | map(attribute="username") | first or "Unknown User" }}
