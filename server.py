@@ -201,7 +201,7 @@ def finalize_timeline():
     add_to_history("model", res.get('revised_plan', 'Plan revised.'))
 
     version = {
-        "timestamp": datetime.now().strftime("%I:%M %p"),
+        "timestamp": datetime.now().strftime("%d/%m/%y %H:%M"),
         "problems": session.get('problems', []),
         "improvements": res.get('improvements', []),
         "revised_plan": res.get('revised_plan', ''),
@@ -285,7 +285,7 @@ def refine():
         add_to_history("model", res.get('revised_plan', 'Plan updated.'))
 
         new_version = {
-            "timestamp": datetime.now().strftime("%I:%M %p"),
+            "timestamp": datetime.now().strftime("%d/%m/%y %H:%M"),
             "problems": res['problems'],
             "improvements": res['improvements'],
             "revised_plan": res['revised_plan'],
