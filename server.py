@@ -352,6 +352,28 @@ def followup():
 
     return render_template('followup.html', data=current['followup'], plan=current['revised_plan'])
 
+
+@app.route('/update_task_status', methods=['POST'])
+def update_task_status():
+    data = request.json
+    task_idx = data.get('task_idx')
+    completed = data.get('completed')
+
+    v_idx = session.get('current_v_idx', 0)
+    # Update the session data
+    session['versions'][v_idx]['followup']['tasks'][task_idx]['completed'] = completed
+    session.modified = True
+
+    # Sync to DB
+    db_logic.update_existing_plan(
+        plan_id=session['plan_db_id'],
+        versions=session['versions'],
+        chat_history=session['chat_history'],
+        followup_data=session['versions'][v_idx]['followup']
+    )
+    return {"status": "ok"}
+
+
 @app.route('/load_plan/<int:plan_id>')
 def load_plan(plan_id):
     """Reloads a plan from the database into the session."""

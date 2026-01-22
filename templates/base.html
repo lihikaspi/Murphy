@@ -122,9 +122,12 @@
 
                 <div class="space-y-1 overflow-y-auto pr-2 custom-scroll flex-1">
                     {% for plan in user_history %}
+                    {# Modified logic: Highlighting only occurs if we are NOT on the instructions page #}
                     <a href="/load_plan/{{ plan.id }}"
                        class="group flex items-center gap-1.5 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-all
-                              {{ 'bg-amber-50 text-amber-700 border border-amber-100 shadow-sm' if session.get('plan_db_id') == plan.id else 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
+                              {{ 'bg-amber-50 text-amber-700 border border-amber-100 shadow-sm'
+                                  if (session.get('plan_db_id') == plan.id and not is_instructions)
+                                  else 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
 
                         {% if plan.followup %}
                             <i data-lucide="clipboard-check" class="w-5 h-5 shrink-0 opacity-60"></i>
