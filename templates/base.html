@@ -34,10 +34,15 @@
 <body class="flex min-h-screen text-slate-900">
 
     {% set is_welcome = request.path == '/' %}
+    {% set is_instructions = request.path == '/instructions' %}
     {% set current_user_id = session.get('db_user_id', -1) %}
+
+    {# Determine if the sidebar should be in minimal mode #}
+    {% set hide_user_details = is_welcome or (is_instructions and current_user_id == -1) %}
 
     <aside class="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col fixed inset-y-0 z-50">
         <div class="p-8 pb-4 flex flex-col h-full overflow-hidden">
+
             <a href="/" class="flex items-center gap-3 text-slate-900 mb-8 shrink-0 hover:opacity-80 transition-opacity">
                 <img src="{{ url_for('static', filename='images/broken_clock.png') }}" class="w-12 h-12 object-contain" alt="Logo">
                 <span class="text-[30px] font-bold tracking-tight">Murphy</span>
@@ -46,7 +51,7 @@
             <div class="mb-8 px-1 shrink-0">
                 <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-2">Active User: </label>
 
-                {% if is_welcome %}
+                {% if hide_user_details %}
                     <p class="text-[15px] text-slate-400 font-medium">No user chosen yet</p>
                 {% else %}
                     <p class="text-[17px] font-extrabold text-slate-900 mb-3">
@@ -59,7 +64,7 @@
                 {% endif %}
             </div>
 
-            {% if session.get('user_input', {}).get('goal') and not is_welcome %}
+            {% if session.get('user_input', {}).get('goal') and not hide_user_details %}
             <div class="mb-8 px-1 shrink-0 fade-in">
                 <p class="text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-1">Current Goal</p>
                 <p class="text-[15px] text-slate-500 leading-relaxed line-clamp-3 font-medium" title="{{ session['user_input']['goal'] }}">
@@ -69,23 +74,30 @@
             {% endif %}
 
             <nav class="space-y-1 mb-8 shrink-0">
-                <a {% if not is_welcome and current_user_id != -1 %} href="/input" {% endif %}
+                <a href="/instructions"
                     class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
-                    {% if is_welcome or current_user_id == -1 %}
+                    {{ 'bg-amber-50 text-amber-900' if is_instructions
+                       else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}">
+                    <i data-lucide="book-open" class="w-5 h-5"></i> How To Use
+                </a>
+
+                <a {% if not hide_user_details %} href="/input" {% endif %}
+                    class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
+                    {% if hide_user_details %}
                         pointer-events-none opacity-40 grayscale cursor-not-allowed
                     {% else %}
-                        {{ 'bg-slate-50 text-slate-900' if request.path == '/input' or request.path == '/maze'
+                        {{ 'bg-red-50 text-red-900' if request.path == '/input'
                         else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
                     {% endif %}">
                     <i data-lucide="pen-tool" class="w-5 h-5"></i> Initial Plan
                 </a>
 
-                <a {% if has_versions and not is_welcome %} href="/dashboard" {% endif %}
+                <a {% if has_versions and not hide_user_details %} href="/dashboard" {% endif %}
                     class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
-                    {% if not has_versions or is_welcome %}
+                    {% if not has_versions or hide_user_details %}
                         pointer-events-none opacity-40 grayscale cursor-not-allowed
                     {% else %}
-                        {{ 'bg-slate-50 text-slate-900' if request.path == '/dashboard'
+                        {{ 'bg-indigo-50 text-indigo-900' if request.path == '/dashboard'
                         else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
                     {% endif %}">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Revised Strategy
@@ -93,19 +105,19 @@
 
                 {% set current_v_idx = session.get('current_v_idx', 0) %}
                 {% set has_followup = has_versions and session['versions'][current_v_idx].get('followup') %}
-                <a {% if has_followup and not is_welcome %} href="/followup" {% endif %}
+                <a {% if has_followup and not hide_user_details %} href="/followup" {% endif %}
                     class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[15px] font-medium transition-colors
-                    {% if not has_followup or is_welcome %}
+                    {% if not has_followup or hide_user_details %}
                         pointer-events-none opacity-40 grayscale cursor-not-allowed
                     {% else %}
-                        {{ 'bg-slate-50 text-slate-900' if request.path == '/followup'
+                        {{ 'bg-emerald-50 text-emerald-900' if request.path == '/followup'
                         else 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' }}
                     {% endif %}">
-                    <i data-lucide="play-circle" class="w-5 h-5"></i> Followup
+                    <i data-lucide="play-circle" class="w-5 h-5"></i> Follow-Up
                 </a>
             </nav>
 
-            <div class="px-1 flex-1 flex flex-col min-h-0 {{ 'hidden' if is_welcome }}">
+            <div class="px-1 flex-1 flex flex-col min-h-0 {{ 'hidden' if hide_user_details }}">
                 <label class="block text-[13px] font-bold text-amber-700 uppercase tracking-widest mb-4">Plan History</label>
 
                 <div class="space-y-1 overflow-y-auto pr-2 custom-scroll flex-1">
@@ -150,12 +162,12 @@
 
                 <form action="/add_user" method="POST" class="space-y-4">
                     <div>
-                        <label class="block text-[15px] font-bold text-slate-400 mb-1">Username</label>
+                        <label class="block text-[15px] font-bold text-slate-400 mb-1">Name</label>
                         <input type="text" name="username" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-[15px] font-bold text-slate-400 mb-1">About / Background</label>
-                        <textarea name="about" required class="w-full h-24 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+                        <textarea name="about" class="w-full h-24 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
                     </div>
                     <div class="flex gap-3 pt-4">
                         <button type="button" onclick="toggleUserModal(false)" class="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>

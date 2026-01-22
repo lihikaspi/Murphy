@@ -13,8 +13,6 @@
                 <span class="px-3 py-1 bg-slate-900 text-white text-[14px] font-bold rounded-full">
                     Obstacle {{ index }} / {{ total }}
                 </span>
-                <button type="button" onclick="toggleScoreModal(true)" class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-300 transition-colors shadow-sm" title="Explain Scores">
-                    <i data-lucide="help-circle" class="w-5 h-5"></i>
                 </button>
             </div>
         </div>
@@ -33,7 +31,14 @@
     </div>
 
     <form action="/process_maze" method="POST">
-        <h4 class="text-xl font-bold text-slate-900 mb-6 px-2">What would you have done?</h4>
+        <h4 class="text-xl font-bold text-slate-900 mb-6 px-2 flex items-center gap-1.5">
+            What would you have done?
+            <button type="button" onclick="toggleScoreModal(true)"
+                    class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-all shadow-sm -mt-0.5"
+                    title="Explain Scores">
+                <i data-lucide="help-circle" class="w-5 h-5"></i>
+            </button>
+        </h4>
 
         <div class="space-y-4">
             {% for option in scenario.options %}
@@ -44,9 +49,6 @@
                 <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-cyan-400 peer-checked:border-cyan-600 peer-checked:bg-cyan-50 transition-all">
                     <div class="flex items-center justify-between mb-3">
                         <span class="font-bold text-[16px] text-slate-800">{{ option.text }}</span>
-                        <div class="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-cyan-600 flex items-center justify-center">
-                            <div class="w-2.5 h-2.5 bg-cyan-600 rounded-full opacity-0 peer-checked:opacity-100"></div>
-                        </div>
                     </div>
 
                     <div class="flex gap-4">
@@ -80,7 +82,7 @@
         </div>
 
         <div class="mt-10 flex justify-end">
-            <button type="submit" class="px-10 py-5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 flex items-center gap-3 transition-all active:scale-95">
+            <button type="submit" class="px-10 py-5 bg-amber-700 text-white font-bold rounded-xl shadow-lg hover:bg-amber-800 flex items-center gap-3 transition-all active:scale-95">
                 {{ 'Seal Timeline' if index == total else 'Next Obstacle' }} <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </button>
         </div>

@@ -87,8 +87,8 @@ def index():
 def add_new_user():
     """Handles adding a new user and going straight to input."""
     username = request.form.get('username')
-    about = request.form.get('about')
-    if username and about:
+    about = request.form.get('about', '') # Default to empty string if not provided
+    if username: # Removed 'and about' requirement
         new_user = db_logic.add_user(username, about)
         perform_switch_user(new_user['id'])
         return redirect(url_for('index'))
@@ -114,6 +114,14 @@ def change_user():
     session['db_user_id'] = -1
     session['user_input'] = {'pessimism': 'Realistic'}
     return redirect(url_for('welcome'))
+
+
+@app.route('/instructions')
+def instructions():
+    """Renders the system workflow and instructions page."""
+    # Ensure a user is active before viewing instructions if desired,
+    # or leave open for all.
+    return render_template('instructions.html')
 
 
 @app.route('/process_input', methods=['POST'])

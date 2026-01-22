@@ -100,6 +100,8 @@ Based on the feedback in the user message:
 1. **Refine Problems**: Keep "liked" problems; replace "disliked" ones with new risks aligned with user feedback.
 2. **Refine Improvements**: Update guidelines to incorporate "liked" elements and remove "disliked" ones.
 3. **Finalize Plan**: Rewrite the strategy into the final version, ensuring it addresses all user critiques.
+    Provide a concise, high-level summary (2-3 sentences) of the updated strategy. 
+    Focus on the core structural changes rather than granular details.
 
 **Output Format**:
 Return a JSON object:
